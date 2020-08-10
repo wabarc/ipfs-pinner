@@ -4,8 +4,16 @@
 
 ## Installation
 
+Via Golang package get command
+
 ```sh
 go get -u github.com/wabarc/ipfs-pinner/cmd/ipfs-pinner
+```
+
+Using [Snapcraft](https://snapcraft.io/ipfs-pinner) (on GNU/Linux)
+
+```sh
+snap install ipfs-pinner
 ```
 
 ## Usage
