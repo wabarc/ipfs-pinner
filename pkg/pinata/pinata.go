@@ -9,6 +9,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	fp "path/filepath"
 	"time"
 )
 
@@ -36,7 +37,7 @@ func (p *Pinata) PinFile(filepath string) (string, error) {
 		defer w.Close()
 		defer m.Close()
 
-		part, err := m.CreateFormFile("file", filepath)
+		part, err := m.CreateFormFile("file", fp.Base(file.Name()))
 		if err != nil {
 			return
 		}
