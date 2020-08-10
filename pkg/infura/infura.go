@@ -1,7 +1,6 @@
 package infura
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,6 +8,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	fp "path/filepath"
 	"time"
 )
 
@@ -21,29 +21,35 @@ const (
 
 func PinFile(filepath string) (string, error) {
 	uri := fmt.Sprintf("%s://%s:%d/api/v0/add", INFURA_PROTOCAL, INFURA_HOST, INFURA_PORT)
-	body := &bytes.Buffer{}
-	writer := multipart.NewWriter(body)
-	defer writer.Close()
 
-	part, err := writer.CreateFormFile("file", filepath)
-	if err != nil {
-		return "", err
-	}
 	file, err := os.Open(filepath)
 	if err != nil {
 		return "", err
 	}
 	defer file.Close()
 
-	if _, err = io.Copy(part, file); err != nil {
-		return "", err
-	}
+	r, w := io.Pipe()
+	m := multipart.NewWriter(w)
+
+	go func() {
+		defer w.Close()
+		defer m.Close()
+
+		part, err := m.CreateFormFile("file", fp.Base(file.Name()))
+		if err != nil {
+			return
+		}
+
+		if _, err = io.Copy(part, file); err != nil {
+			return
+		}
+	}()
 
 	client := &http.Client{
 		Timeout: 30 * time.Second,
 	}
-	req, err := http.NewRequest(http.MethodPost, uri, body)
-	req.Header.Add("Content-Type", writer.FormDataContentType())
+	req, err := http.NewRequest(http.MethodPost, uri, r)
+	req.Header.Add("Content-Type", m.FormDataContentType())
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", err
