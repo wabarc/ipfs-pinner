@@ -1,5 +1,7 @@
 # ipfs-pinner
 
+[![ipfs-pinner](https://snapcraft.io/ipfs-pinner/badge.svg)](https://snapcraft.io/ipfs-pinner)
+
 `ipfs-pinner` is a toolkit to help upload files or specific content id to IPFS pinning services.
 
 ## Installation

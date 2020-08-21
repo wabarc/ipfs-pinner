@@ -1,0 +1,39 @@
+name: ipfs-pinner
+
+version: 'git'
+
+summary: A toolkit to upload files to IPFS pinning services.
+
+description: |
+  ipfs-pinner is a toolkit to help upload files or specific content id to IPFS pinning services.
+  Website https://github.com/wabarc/ipfs-pinner
+
+  Supported Pinning Services：
+
+  1.Infura
+  Infura is a freemium pinning service that doesn't require any additional setup. It's the default one used.
+  Please bear in mind that Infura is a free service, so there is probably a rate-limiting. https://infura.io
+  Usage：ipfs-pinner file-to-path
+
+  2.Pinata
+  Pinata is a freemium pinning service. It gives you more control over what's uploaded.
+  You can delete, label and add custom metadata. This service requires signup. https://pinata.cloud/
+  Usage：ipfs-pinner -p pinata file-to-path
+
+grade: stable
+
+confinement: strict
+
+base: core18
+
+parts:
+  ipfs-pinner:
+    plugin: go
+    source: https://github.com/wabarc/ipfs-pinner.git
+    go-importpath: github.com/wabarc/ipfs-pinner/cmd/ipfs-pinner
+    build-packages:
+      - build-essential
+
+apps:
+  ipfs-pinner:
+    command: ipfs-pinner
