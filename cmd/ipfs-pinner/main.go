@@ -19,7 +19,7 @@ var (
 func init() {
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage:\n\n")
-		fmt.Fprintf(os.Stderr, "  ipfs-pinner [arguments] file\n\n")
+		fmt.Fprintf(os.Stderr, "  ipfs-pinner [options] file\n\n")
 
 		flag.PrintDefaults()
 	}
