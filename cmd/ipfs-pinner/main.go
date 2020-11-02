@@ -6,8 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/wabarc/ipfs-pinner/pkg/infura"
-	"github.com/wabarc/ipfs-pinner/pkg/pinata"
+	Pinner "github.com/wabarc/ipfs-pinner"
 )
 
 var (
@@ -19,14 +18,14 @@ var (
 func init() {
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage:\n\n")
-		fmt.Fprintf(os.Stderr, "  ipfs-pinner [options] file\n\n")
+		fmt.Fprintf(os.Stderr, "  ipfs-pinner [options] [file1] ... [fileN]\n\n")
 
 		flag.PrintDefaults()
 	}
 	var basePrint = func() {
-		fmt.Printf("A CLI tool for pin files to IPFS.\n\n")
+		fmt.Print("A CLI tool for pin files to IPFS.\n\n")
 		flag.Usage()
-		fmt.Fprintf(os.Stderr, "\n")
+		fmt.Fprint(os.Stderr, "\n")
 	}
 
 	flag.StringVar(&pinner, "p", "infura", "IPFS pinner, supports pinners: infura, pinata.")
@@ -41,7 +40,7 @@ func init() {
 		apikey = os.Getenv("IPFS_PINNER_PINATA_API_KEY")
 		secret = os.Getenv("IPFS_PINNER_PINATA_SECRET_API_KEY")
 		if apikey == "" || secret == "" {
-			fmt.Printf("Pinata require IPFS_PINNER_PINATA_API_KEY and IPFS_PINNER_PINATA_SECRET_API_KEY environment variables.\n\n")
+			fmt.Print("Pinata require IPFS_PINNER_PINATA_API_KEY and IPFS_PINNER_PINATA_SECRET_API_KEY environment variables.\n\n")
 			basePrint()
 			os.Exit(0)
 		}
@@ -54,31 +53,21 @@ func init() {
 }
 
 func main() {
-	args := flag.Args()
-	filepath := args[0]
-	if _, err := os.Stat(filepath); err != nil {
-		fmt.Fprint(os.Stderr, err, "\n")
-		os.Exit(1)
-	}
+	files := flag.Args()
 
-	var cid string
-	var err error
+	for _, path := range files {
+		if _, err := os.Stat(path); err != nil {
+			fmt.Fprintf(os.Stderr, "%s: no such file%v", path, "\n")
+			continue
+		}
 
-	switch pinner {
-	default:
-		err = fmt.Errorf("%s", "unknow pinner")
-	case "infura":
-		cid, err = infura.PinFile(filepath)
-	case "pinata":
-		pnt := pinata.Pinata{Apikey: apikey, Secret: secret}
-		cid, err = pnt.PinFile(filepath)
-	}
+		handle := Pinner.Config{Pinner: pinner, Apikey: apikey, Secret: secret}
+		cid, err := handle.Pin(path)
 
-	if err != nil {
-		fmt.Fprint(os.Stderr, err, "\n")
-		os.Exit(1)
-	} else {
-		fmt.Fprint(os.Stdout, cid, "\n")
-		os.Exit(0)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s: %v%v", path, err, "\n")
+		} else {
+			fmt.Fprintf(os.Stdout, "%s: %s%v", path, cid, "\n")
+		}
 	}
 }

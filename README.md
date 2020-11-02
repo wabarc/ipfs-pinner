@@ -34,7 +34,15 @@ Command-line:
 
 Use flag `-p infura`.
 ```sh
-ipfs-pinner file-to-path
+$ ipfs-pinner
+A CLI tool for pin files to IPFS.
+
+Usage:
+
+  ipfs-pinner [options] [file1] ... [fileN]
+
+  -p string
+    	IPFS pinner, supports pinners: infura, pinata. (default "infura")
 ```
 
 Go package:
