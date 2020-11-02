@@ -1,4 +1,4 @@
-name: Test
+name: Testing
 
 on:
   push:
@@ -17,16 +17,19 @@ on:
 
 jobs:
   test:
-    name: Test
+    name: Testing
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
+        go: [ "1.11", "1.12", "1.13", "1.14", "1.15" ]
+
     steps:
     - name: Set up Go 1.x
       uses: actions/setup-go@v2
       with:
-        go-version: ^1.15
+        go-version: ${{ matrix.go }}
 
     - name: Set up IPFS
       uses: ibnesayeed/setup-ipfs@master
