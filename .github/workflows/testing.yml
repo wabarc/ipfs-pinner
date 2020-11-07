@@ -2,13 +2,13 @@ name: Testing
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
     paths:
       - "**/*.go"
       - "go.mod"
       - "go.sum"
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
     types: [ opened, synchronize, reopened ]
     paths:
       - "**/*.go"
@@ -32,7 +32,7 @@ jobs:
         go-version: ${{ matrix.go }}
 
     - name: Set up IPFS
-      uses: ibnesayeed/setup-ipfs@master
+      uses: ibnesayeed/setup-ipfs@main
       id: ipfs
       with:
         run_daemon: true
