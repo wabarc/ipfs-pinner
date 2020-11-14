@@ -32,7 +32,7 @@ jobs:
         go-version: ${{ matrix.go }}
 
     - name: Set up IPFS
-      uses: ibnesayeed/setup-ipfs@main
+      uses: ibnesayeed/setup-ipfs@0.6.0
       id: ipfs
       with:
         run_daemon: true
