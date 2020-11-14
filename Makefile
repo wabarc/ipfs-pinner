@@ -119,7 +119,7 @@ zip_releases := $(addsuffix .zip, $(WINDOWS_ARCH_LIST))
 $(tar_releases): %.gz : %
 	@mkdir -p $(PACKDIR)
 	chmod +x $(BINDIR)/$(NAME)-$(basename $@)
-	tar -czf $(PACKDIR)/$(NAME)-$(basename $@)-$(VERSION).tar.gz --transform "s,$(BINDIR)/,bin/," $(BINDIR)/$(NAME)-$(basename $@)
+	tar -czf $(PACKDIR)/$(NAME)-$(basename $@)-$(VERSION).tar.gz --transform "s/$(notdir $(BINDIR))//g" $(BINDIR)/$(NAME)-$(basename $@)
 
 $(zip_releases): %.zip : %
 	@mkdir -p $(PACKDIR)

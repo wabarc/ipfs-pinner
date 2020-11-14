@@ -57,7 +57,7 @@ func main() {
 
 	for _, path := range files {
 		if _, err := os.Stat(path); err != nil {
-			fmt.Fprintf(os.Stderr, "%s: no such file%v", path, "\n")
+			fmt.Fprintf(os.Stderr, "ipfs-pinner: %s: no such file or directory\n", path)
 			continue
 		}
 
@@ -65,9 +65,9 @@ func main() {
 		cid, err := handle.Pin(path)
 
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s: %v%v", path, err, "\n")
+			fmt.Fprintf(os.Stderr, "ipfs-pinner: %v\n", err)
 		} else {
-			fmt.Fprintf(os.Stdout, "%s: %s%v", path, cid, "\n")
+			fmt.Fprintf(os.Stdout, "%s  %s\n", cid, path)
 		}
 	}
 }
