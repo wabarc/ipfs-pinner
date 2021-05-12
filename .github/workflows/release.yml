@@ -21,7 +21,7 @@ jobs:
     needs: setup
     steps:
     - name: Check out code into the Go module directory
-      uses: actions/checkout@v2
+      uses: actions/checkout@v2.3.4
 
     - name: List checked-out code
       run: ls -al
