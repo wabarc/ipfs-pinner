@@ -71,24 +71,16 @@ jobs:
         path: ipfs-pinner # Put files to ipfs-pinner directory
 
     - name: Create Release
-      uses: actions/create-release@v1
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
       with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
         body: |
           **Digests in this release:**
 
           ```
           ${{ needs.checksum.outputs.digest }}
           ```
-        draft: false
-        prerelease: true
-
-    - name: Upload release assets
-      uses: fnkr/github-action-ghr@v1
-      if: startsWith(github.ref, 'refs/tags/')
-      env:
-        GHR_PATH: ipfs-pinner/
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        files: ipfs-pinner/*
+        draft: true
