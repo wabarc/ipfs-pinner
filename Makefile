@@ -13,6 +13,7 @@ PACKAGES := $(shell go list ./...)
 
 PLATFORM_LIST = \
 	darwin-amd64 \
+	darwin-arm64 \
 	linux-386 \
 	linux-amd64 \
 	linux-armv5 \
@@ -46,6 +47,9 @@ darwin-386:
 darwin-amd64:
 	GOARCH=amd64 GOOS=darwin $(GOBUILD) -o $(BINDIR)/$(NAME)-$@ $(GOFILES)
 
+darwin-arm64:
+	GOARCH=arm64 GOOS=darwin $(GOBUILD) -o $(BINDIR)/$(NAME)-$@ $(GOFILES)
+
 linux-386:
 	GOARCH=386 GOOS=linux $(GOBUILD) -o $(BINDIR)/$(NAME)-$@ $(GOFILES)
 
@@ -61,6 +65,7 @@ linux-armv6:
 linux-armv7:
 	GOARCH=arm GOOS=linux GOARM=7 $(GOBUILD) -o $(BINDIR)/$(NAME)-$@ $(GOFILES)
 
+linux-arm64: linux-armv8
 linux-armv8:
 	GOARCH=arm64 GOOS=linux $(GOBUILD) -o $(BINDIR)/$(NAME)-$@ $(GOFILES)
 
@@ -96,6 +101,9 @@ freebsd-386:
 
 freebsd-amd64:
 	GOARCH=amd64 GOOS=freebsd $(GOBUILD) -o $(BINDIR)/$(NAME)-$@ $(GOFILES)
+
+freebsd-arm64:
+	GOARCH=arm64 GOOS=freebsd $(GOBUILD) -o $(BINDIR)/$(NAME)-$@ $(GOFILES)
 
 openbsd-386:
 	GOARCH=386 GOOS=openbsd $(GOBUILD) -o $(BINDIR)/$(NAME)-$@ $(GOFILES)
