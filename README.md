@@ -1,8 +1,13 @@
 # ipfs-pinner
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/wabarc/ipfs-pinner)](https://goreportcard.com/report/github.com/wabarc/ipfs-pinner)
+[![Go Reference](https://img.shields.io/badge/godoc-reference-blue.svg)](https://pkg.go.dev/github.com/wabarc/ipfs-pinner)
+[![Releases](https://img.shields.io/github/v/release/wabarc/ipfs-pinner.svg?include_prereleases&color=blue)](https://github.com/wabarc/ipfs-pinner/releases)
 [![ipfs-pinner](https://snapcraft.io/ipfs-pinner/badge.svg)](https://snapcraft.io/ipfs-pinner)
 
 `ipfs-pinner` is a toolkit to help upload files or specific content id to IPFS pinning services.
+
+Supported Golang version: See [.github/workflows/testing.yml](./.github/workflows/testing.yml)
 
 ## Installation
 
