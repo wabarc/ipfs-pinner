@@ -37,3 +37,6 @@ parts:
 apps:
   ipfs-pinner:
     command: ipfs-pinner
+    plugs:
+      - home
+      - network
