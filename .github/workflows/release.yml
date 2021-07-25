@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
 
+env:
+  PRODUCT: ipfs-pinner
+
 jobs:
   setup:
     name: Initial build env
@@ -35,8 +38,8 @@ jobs:
     - name: Upload archived binary
       uses: actions/upload-artifact@v2
       with:
-        name: ipfs-pinner
-        path: build/package/ipfs-pinner*
+        name: ${{ env.PRODUCT }}
+        path: build/package/${{ env.PRODUCT }}*
 
   checksum:
     name: Get archived packages checksum
@@ -48,7 +51,7 @@ jobs:
     - name: Download math result from build job
       uses: actions/download-artifact@v2
       with:
-        name: ipfs-pinner
+        name: ${{ env.PRODUCT }}
         path: .
 
     - name: Create all binary digest
@@ -64,11 +67,42 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build, checksum]
     steps:
+    - name: Check out code base
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
     - name: Download math result from build and checksum jobs
       uses: actions/download-artifact@v2
       with:
-        name: ipfs-pinner
-        path: ipfs-pinner # Put files to ipfs-pinner directory
+        name: ${{ env.PRODUCT }}
+        path: ${{ env.PRODUCT }} # Put files to ipfs-pinner directory
+
+    - name: Generate Git log
+      run: |
+        git fetch origin +refs/tags/*:refs/tags/*
+        echo "Current Tag: ${GITHUB_REF}"
+        git checkout ${GITHUB_REF} -b release-log
+        GITVER=$(git describe --tags)
+        PREVVER=$(git describe --tags --abbrev=0 ${GITVER}~1)
+        git log --oneline ${PREVVER}..${GITVER} > gittaglogs.txt
+        MORE=$(echo "See more on [releases](https://github.com/${{ github.repository }}/releases)")
+        echo -e "*Release ${GITVER}* #ipfspinner\n" > release-note.md
+        cut -c9- gittaglogs.txt | sed -e 's/^/- /' | sed -e 's/\"/\\"/g' >> release-note.md
+        echo -e "\n${MORE}" | tee -a release-note.md gittaglogs.txt > /dev/null
+        # Append digests
+        echo '
+        **Digests in this release:**
+        ```
+        ${{ needs.checksum.outputs.digest }}
+        ```
+        ' >> gittaglogs.txt
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: release-note
+        path: release-note.md
 
     - name: Create Release
       uses: softprops/action-gh-release@v1
@@ -76,11 +110,30 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
       with:
-        body: |
-          **Digests in this release:**
+        body_path: gittaglogs.txt
+        files: ${{ env.PRODUCT }}/*${{ env.PRODUCT }}*
+        prerelease: true
+        draft: false
 
-          ```
-          ${{ needs.checksum.outputs.digest }}
-          ```
-        files: ipfs-pinner/*
-        draft: true
+  notification:
+    if: github.repository == 'wabarc/ipfs-pinner'
+    name: Send Notification
+    runs-on: ubuntu-latest
+    needs: [release]
+    steps:
+    - name: Download artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: release-note
+        path: .
+
+    - name: Send release note to Telegram channel
+      continue-on-error: true
+      run: |
+        TEXT="$(cat release-note.md)"
+        echo -e "${TEXT}"
+        curl --silent --output /dev/null --show-error --fail -X POST \
+             -H 'Content-Type: application/json' \
+             -d '{"chat_id": "${{ secrets.TELEGRAM_TO }}", "text": "'"${TEXT}"'", "parse_mode": "markdown"}' \
+             "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage"
+
