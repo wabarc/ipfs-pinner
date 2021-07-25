@@ -28,9 +28,7 @@ func TestPinFile(t *testing.T) {
 	}
 
 	handle := Config{Pinner: "infura"}
-	if cid, err := handle.Pin(tmpfile.Name()); err != nil {
+	if _, err := handle.Pin(tmpfile.Name()); err != nil {
 		t.Error(err)
-	} else {
-		t.Log(cid)
 	}
 }

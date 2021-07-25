@@ -37,10 +37,8 @@ func TestPinFile(t *testing.T) {
 	}
 
 	pinata := &Pinata{Apikey: APIKEY, Secret: SECRET}
-	if cid, err := pinata.PinFile(tmpfile.Name()); err != nil {
+	if _, err := pinata.PinFile(tmpfile.Name()); err != nil {
 		t.Error(err)
-	} else {
-		t.Log(cid)
 	}
 }
 

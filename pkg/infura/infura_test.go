@@ -18,10 +18,8 @@ func TestPinFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if cid, err := PinFile(tmpfile.Name()); err != nil {
+	if _, err := PinFile(tmpfile.Name()); err != nil {
 		t.Error(err)
-	} else {
-		t.Log(cid)
 	}
 }
 
