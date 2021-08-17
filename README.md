@@ -38,6 +38,7 @@ so there is probably a rate-limiting.
 Command-line:
 
 Use flag `-p infura`.
+<!-- markdownlint-disable-file MD010 -->
 ```sh
 $ ipfs-pinner
 A CLI tool for pin files to IPFS.
@@ -49,6 +50,7 @@ Usage:
   -p string
     	IPFS pinner, supports pinners: infura, pinata. (default "infura")
 ```
+<!-- markdownlint-enable-file MD010 -->
 
 Go package:
 ```go
