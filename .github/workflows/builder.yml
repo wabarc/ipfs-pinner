@@ -21,6 +21,7 @@ on:
 env:
   PRODUCT: ipfs-pinner
 
+permissions: write-all
 jobs:
   build:
     name: Build

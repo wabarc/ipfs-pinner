@@ -8,6 +8,7 @@ on:
 env:
   PRODUCT: ipfs-pinner
 
+permissions: write-all
 jobs:
   setup:
     name: Initial build env
