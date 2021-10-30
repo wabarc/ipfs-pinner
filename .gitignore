@@ -15,4 +15,6 @@
 # vendor/
 
 /bin
-/build/package
+/build/binary/*
+/build/package/*
+!/build/package/.gitkeep

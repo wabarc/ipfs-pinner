@@ -1,15 +1,28 @@
 export GO111MODULE = on
+export CGO_ENABLED = 0
 export GOPROXY = https://proxy.golang.org
 
 NAME = ipfs-pinner
-BINDIR ?= ./bin
+REPO = github.com/wabarc/ipfs-pinner
+BINDIR ?= ./build/binary
 PACKDIR ?= ./build/package
-GOBUILD := CGO_ENABLED=0 go build --ldflags="-s -w" -v
-GOFILES := $(wildcard ./cmd/ipfs-pinner/*.go)
-VERSION := $(shell git describe --tags `git rev-list --tags --max-count=1`)
-VERSION := $(VERSION:v%=%)
+LDFLAGS := $(shell echo "-X '${REPO}/version.Version=`git describe --tags --abbrev=0`'")
+LDFLAGS := $(shell echo "${LDFLAGS} -X '${REPO}/version.Commit=`git rev-parse --short HEAD`'")
+LDFLAGS := $(shell echo "${LDFLAGS} -X '${REPO}/version.BuildDate=`date +%FT%T%z`'")
+GOBUILD ?= go build -trimpath --ldflags "-s -w ${LDFLAGS} -buildid=" -v
+VERSION ?= $(shell git describe --tags `git rev-list --tags --max-count=1` | sed -e 's/v//g')
+GOFILES ?= $(wildcard ./cmd/ipfs-pinner/*.go)
 PROJECT := github.com/wabarc/ipfs-pinner
-PACKAGES := $(shell go list ./...)
+PACKAGES ?= $(shell go list ./...)
+DOCKER ?= $(shell which docker || which podman)
+DOCKER_IMAGE := wabarc/ipfs-pinner
+DEB_IMG_ARCH := amd64
+
+.DEFAULT_GOAL := help
+
+.PHONY: help
+help: ## show help message
+	@awk 'BEGIN {FS = ":.*##"; printf "Usage:\n  make <taraget>\n\nTargets: \033[36m\033[0m\n"} /^[$$()% 0-9a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 PLATFORM_LIST = \
 	darwin-amd64 \
@@ -19,7 +32,7 @@ PLATFORM_LIST = \
 	linux-armv5 \
 	linux-armv6 \
 	linux-armv7 \
-	linux-armv8 \
+	linux-arm64 \
 	linux-mips-softfloat \
 	linux-mips-hardfloat \
 	linux-mipsle-softfloat \
@@ -31,115 +44,98 @@ PLATFORM_LIST = \
 	linux-s390x \
 	freebsd-386 \
 	freebsd-amd64 \
+	freebsd-arm64 \
 	openbsd-386 \
-	openbsd-amd64
+	openbsd-amd64 \
+	dragonfly-amd64 \
+	android-arm64
 
 WINDOWS_ARCH_LIST = \
 	windows-386 \
-	windows-amd64
+	windows-amd64 \
+	windows-arm \
+	windows-arm64
 
-.PHONY: all
-all: linux-amd64 darwin-amd64 windows-amd64
+.PHONY: \
+	all-arch \
+	tar_releases \
+	zip_releases \
+	releases \
+	clean \
+	test \
+	fmt
 
-darwin-386:
-	GOARCH=386 GOOS=darwin $(GOBUILD) -o $(BINDIR)/$(NAME)-$@ $(GOFILES)
+.SECONDEXPANSION:
+%: ## Build binary, format: linux-amd64, darwin-arm64, full list: https://golang.org/doc/install/source#environment
+	$(eval OS := $(shell echo $@ | cut -d'-' -f1))
+	$(eval ARM := $(shell echo $@ | cut -d'-' -f2 | grep arm | sed -e 's/arm64//' | tr -dc '[0-9]'))
+	$(eval ARCH := $(shell echo $@ | cut -d'-' -f2 | sed -e 's/armv.*/arm/' | grep -v $(OS)))
+	$(eval MIPS := $(shell echo $@ | cut -d'-' -f3))
+	$(if $(strip $(OS)),,$(error missing OS))
+	$(if $(strip $(ARCH)),,$(error missing ARCH))
+	GOOS="$(OS)" GOARCH="$(ARCH)" GOMIPS="$(MIPS)" GOARM="$(ARM)" $(GOBUILD) -o $(BINDIR)/$(NAME)-$@ $(GOFILES)
 
-darwin-amd64:
-	GOARCH=amd64 GOOS=darwin $(GOBUILD) -o $(BINDIR)/$(NAME)-$@ $(GOFILES)
+.PHONY: build
+build: ## Build binary for current OS
+	$(GOBUILD) -o $(BINDIR)/$(NAME) $(GOFILES)
 
-darwin-arm64:
-	GOARCH=arm64 GOOS=darwin $(GOBUILD) -o $(BINDIR)/$(NAME)-$@ $(GOFILES)
+.PHONY: linux-armv8
+linux-armv8: linux-arm64
 
-linux-386:
-	GOARCH=386 GOOS=linux $(GOBUILD) -o $(BINDIR)/$(NAME)-$@ $(GOFILES)
+ifeq ($(TARGET),)
+tar_releases := $(addsuffix .gz, $(PLATFORM_LIST))
+zip_releases := $(addsuffix .zip, $(WINDOWS_ARCH_LIST))
+else
+ifeq ($(findstring windows,$(TARGET)),windows)
+zip_releases := $(addsuffix .zip, $(TARGET))
+else
+tar_releases := $(addsuffix .gz, $(TARGET))
+endif
+endif
 
-linux-amd64:
-	GOARCH=amd64 GOOS=linux $(GOBUILD) -o $(BINDIR)/$(NAME)-$@ $(GOFILES)
+$(tar_releases): %.gz : %
+	chmod +x $(BINDIR)/$(NAME)-$(basename $@)
+	tar -czf $(PACKDIR)/$(NAME)-$(basename $@)-$(VERSION).tar.gz --transform "s/.*\///g" $(BINDIR)/$(NAME)-$(basename $@) LICENSE README.md
 
-linux-armv5:
-	GOARCH=arm GOOS=linux GOARM=5 $(GOBUILD) -o $(BINDIR)/$(NAME)-$@ $(GOFILES)
+$(zip_releases): %.zip : %
+	@mv $(BINDIR)/$(NAME)-$(basename $@) $(BINDIR)/$(NAME)-$(basename $@).exe
+	zip -m -j $(PACKDIR)/$(NAME)-$(basename $@)-$(VERSION).zip $(BINDIR)/$(NAME)-$(basename $@).exe LICENSE README.md
 
-linux-armv6:
-	GOARCH=arm GOOS=linux GOARM=6 $(GOBUILD) -o $(BINDIR)/$(NAME)-$@ $(GOFILES)
+all-arch: $(PLATFORM_LIST) $(WINDOWS_ARCH_LIST) ## Build binary for all architecture
 
-linux-armv7:
-	GOARCH=arm GOOS=linux GOARM=7 $(GOBUILD) -o $(BINDIR)/$(NAME)-$@ $(GOFILES)
+releases: $(tar_releases) $(zip_releases) ## Packaging all binaries
 
-linux-arm64: linux-armv8
-linux-armv8:
-	GOARCH=arm64 GOOS=linux $(GOBUILD) -o $(BINDIR)/$(NAME)-$@ $(GOFILES)
+clean: ## Clean workspace
+	rm -f $(BINDIR)/*
+	rm -f $(PACKDIR)/*
+	rm -rf data-dir*
+	rm -rf coverage*
+	rm -rf *.out
+	rm -rf ipfs-pinner.db
 
-linux-mips-softfloat:
-	GOARCH=mips GOMIPS=softfloat GOOS=linux $(GOBUILD) -o $(BINDIR)/$(NAME)-$@ $(GOFILES)
-
-linux-mips-hardfloat:
-	GOARCH=mips GOMIPS=hardfloat GOOS=linux $(GOBUILD) -o $(BINDIR)/$(NAME)-$@ $(GOFILES)
-
-linux-mipsle-softfloat:
-	GOARCH=mipsle GOMIPS=softfloat GOOS=linux $(GOBUILD) -o $(BINDIR)/$(NAME)-$@ $(GOFILES)
-
-linux-mipsle-hardfloat:
-	GOARCH=mipsle GOMIPS=hardfloat GOOS=linux $(GOBUILD) -o $(BINDIR)/$(NAME)-$@ $(GOFILES)
-
-linux-mips64:
-	GOARCH=mips64 GOOS=linux $(GOBUILD) -o $(BINDIR)/$(NAME)-$@ $(GOFILES)
-
-linux-mips64le:
-	GOARCH=mips64le GOOS=linux $(GOBUILD) -o $(BINDIR)/$(NAME)-$@ $(GOFILES)
-
-linux-ppc64:
-	GOARCH=ppc64 GOOS=linux $(GOBUILD) -o $(BINDIR)/$(NAME)-$@ $(GOFILES)
-
-linux-ppc64le:
-	GOARCH=ppc64le GOOS=linux $(GOBUILD) -o $(BINDIR)/$(NAME)-$@ $(GOFILES)
-
-linux-s390x:
-	GOARCH=s390x GOOS=linux $(GOBUILD) -o $(BINDIR)/$(NAME)-$@ $(GOFILES)
-
-freebsd-386:
-	GOARCH=386 GOOS=freebsd $(GOBUILD) -o $(BINDIR)/$(NAME)-$@ $(GOFILES)
-
-freebsd-amd64:
-	GOARCH=amd64 GOOS=freebsd $(GOBUILD) -o $(BINDIR)/$(NAME)-$@ $(GOFILES)
-
-freebsd-arm64:
-	GOARCH=arm64 GOOS=freebsd $(GOBUILD) -o $(BINDIR)/$(NAME)-$@ $(GOFILES)
-
-openbsd-386:
-	GOARCH=386 GOOS=openbsd $(GOBUILD) -o $(BINDIR)/$(NAME)-$@ $(GOFILES)
-
-openbsd-amd64:
-	GOARCH=amd64 GOOS=openbsd $(GOBUILD) -o $(BINDIR)/$(NAME)-$@ $(GOFILES)
-
-windows-386:
-	GOARCH=386 GOOS=windows $(GOBUILD) -o $(BINDIR)/$(NAME)-$@.exe $(GOFILES)
-
-windows-amd64:
-	GOARCH=amd64 GOOS=windows $(GOBUILD) -o $(BINDIR)/$(NAME)-$@.exe $(GOFILES)
-
-fmt:
+fmt: ## Format codebase
 	@echo "-> Running go fmt"
 	@go fmt $(PACKAGES)
 
-tar_releases := $(addsuffix .gz, $(PLATFORM_LIST))
-zip_releases := $(addsuffix .zip, $(WINDOWS_ARCH_LIST))
+vet: ## Vet codebase
+	@echo "-> Running go vet"
+	@go vet $(PACKAGES)
 
-$(tar_releases): %.gz : %
-	@mkdir -p $(PACKDIR)
-	chmod +x $(BINDIR)/$(NAME)-$(basename $@)
-	tar -czf $(PACKDIR)/$(NAME)-$(basename $@)-$(VERSION).tar.gz --transform "s/$(notdir $(BINDIR))//g" $(BINDIR)/$(NAME)-$(basename $@)
+test: ## Run testing
+	@echo "-> Running go test"
+	@go clean -testcache
+	@CGO_ENABLED=1 go test -v -race -cover -coverprofile=coverage.out -covermode=atomic -parallel=1 ./...
 
-$(zip_releases): %.zip : %
-	@mkdir -p $(PACKDIR)
-	zip -m -j $(PACKDIR)/$(NAME)-$(basename $@)-$(VERSION).zip $(BINDIR)/$(NAME)-$(basename $@).exe
+test-integration: ## Run integration testing
+	@echo 'mode: atomic' > coverage.out
+	@go list ./... | xargs -n1 -I{} sh -c 'CGO_ENABLED=1 go test -race -tags=integration -covermode=atomic -coverprofile=coverage.tmp -coverpkg $(go list ./... | tr "\n" ",") {} && tail -n +2 coverage.tmp >> coverage.out || exit 255'
+	@rm coverage.tmp
 
-all-arch: $(PLATFORM_LIST) $(WINDOWS_ARCH_LIST)
+test-cover: ## Collect code coverage
+	@echo "-> Running go tool cover"
+	@go tool cover -func=coverage.out
+	@go tool cover -html=coverage.out -o coverage.html
 
-releases: $(tar_releases) $(zip_releases)
-
-clean:
-	rm -f $(BINDIR)/*
-	rm -f $(PACKDIR)/*
-
-tag:
-	git tag v$(VERSION)
+scan: ## Scan vulnerabilities
+	@echo "-> Scanning vulnerabilities..."
+	@go list -json -m all | $(DOCKER) run --rm -i sonatypecommunity/nancy sleuth --skip-update-check
