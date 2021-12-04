@@ -48,7 +48,7 @@ Usage:
   ipfs-pinner [options] [file1] ... [fileN]
 
   -p string
-    	IPFS pinner, supports pinners: infura, pinata. (default "infura")
+       IPFS pinner, supports pinners: infura, pinata. (default "infura")
 ```
 <!-- markdownlint-enable-file MD010 -->
 
