@@ -70,6 +70,26 @@ func main() {
 }
 ```
 
+or requests with project authentication
+
+```go
+import (
+        "fmt"
+
+        "github.com/wabarc/ipfs-pinner/pkg/infura"
+)
+
+func main() {
+        inf := &infura.Infura{ProjectID: "your-project-id", ProjectSecret: "your-project-secret"}
+        cid, err := inf.PinFile("file-to-path");
+        if err != nil {
+                fmt.Sprintln(err)
+                return
+        }
+        fmt.Println(cid)
+}
+```
+
 #### [Pinata](https://pinata.cloud)
 
 Pinata is another freemium pinning service. It gives you more control over
