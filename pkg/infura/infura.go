@@ -1,6 +1,7 @@
 package infura
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -8,21 +9,31 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
-	fp "path/filepath"
+	"path/filepath"
 	"time"
+
+	"github.com/wabarc/helper"
 )
 
-const (
-	INFURA_HOST = "ipfs.infura.io"
-	INFURA_PORT = 5001
+const api = "https://ipfs.infura.io:5001"
 
-	INFURA_PROTOCAL = "https"
-)
+// Infura represents an Infura configuration. If there is no ProjectID or
+// ProjectSecret, it will make API calls using anonymous requests.
+type Infura struct {
+	ProjectID     string
+	ProjectSecret string
+}
 
-func PinFile(filepath string) (string, error) {
-	uri := fmt.Sprintf("%s://%s:%d/api/v0/add", INFURA_PROTOCAL, INFURA_HOST, INFURA_PORT)
+// PinFile alias to *Infura.PinFile, the purpose is to be backwards
+// compatible with the original function.
+func PinFile(fp string) (string, error) {
+	return (&Infura{}).PinFile(fp)
+}
 
-	file, err := os.Open(filepath)
+// PinFile pins content to Infura by providing a file path, it returns an IPFS
+// hash and an error.
+func (inf *Infura) PinFile(fp string) (string, error) {
+	file, err := os.Open(fp)
 	if err != nil {
 		return "", err
 	}
@@ -35,7 +46,7 @@ func PinFile(filepath string) (string, error) {
 		defer w.Close()
 		defer m.Close()
 
-		part, err := m.CreateFormFile("file", fp.Base(file.Name()))
+		part, err := m.CreateFormFile("file", filepath.Base(file.Name()))
 		if err != nil {
 			return
 		}
@@ -45,16 +56,79 @@ func PinFile(filepath string) (string, error) {
 		}
 	}()
 
+	return inf.pinFile(r, m)
+}
+
+// PinWithReader pins content to Infura by given io.Reader, it returns an IPFS hash and an error.
+func (inf *Infura) PinWithReader(rd io.Reader) (string, error) {
+	r, w := io.Pipe()
+	m := multipart.NewWriter(w)
+	fn := helper.RandString(6, "lower")
+
+	go func() {
+		defer w.Close()
+		defer m.Close()
+
+		part, err := m.CreateFormFile("file", fn)
+		if err != nil {
+			return
+		}
+
+		if _, err = io.Copy(part, rd); err != nil {
+			return
+		}
+	}()
+
+	return inf.pinFile(r, m)
+}
+
+// PinWithBytes pins content to Infura by given byte slice, it returns an IPFS hash and an error.
+func (inf *Infura) PinWithBytes(buf []byte) (string, error) {
+	r, w := io.Pipe()
+	m := multipart.NewWriter(w)
+	fn := helper.RandString(6, "lower")
+
+	go func() {
+		defer w.Close()
+		defer m.Close()
+
+		part, err := m.CreateFormFile("file", fn)
+		if err != nil {
+			return
+		}
+
+		if _, err = part.Write(buf); err != nil {
+			return
+		}
+	}()
+
+	return inf.pinFile(r, m)
+}
+
+func (inf *Infura) pinFile(r *io.PipeReader, m *multipart.Writer) (string, error) {
+	endpoint := api + "/api/v0/add"
 	client := &http.Client{
 		Timeout: 30 * time.Second,
 	}
-	req, err := http.NewRequest(http.MethodPost, uri, r)
+	req, err := http.NewRequest(http.MethodPost, endpoint, r)
+	if err != nil {
+		return "", err
+	}
 	req.Header.Add("Content-Type", m.FormDataContentType())
+	if inf.ProjectID != "" && inf.ProjectSecret != "" {
+		req.Header.Add("Authorization", "Basic "+basicAuth(inf.ProjectID, inf.ProjectSecret))
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", err
 	}
 	defer resp.Body.Close()
+
+	// It limits anonymous requests to 12 write requests/min.
+	// https://infura.io/docs/ipfs#section/Rate-Limits/API-Anonymous-Requests
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf(resp.Status)
+	}
 
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -63,6 +137,9 @@ func PinFile(filepath string) (string, error) {
 
 	var dat map[string]interface{}
 	if err := json.Unmarshal(data, &dat); err != nil {
+		if e, ok := err.(*json.SyntaxError); ok {
+			return "", fmt.Errorf("json syntax error at byte offset %d", e.Offset)
+		}
 		return "", err
 	}
 
@@ -73,17 +150,40 @@ func PinFile(filepath string) (string, error) {
 	return "", fmt.Errorf("Pin file to Infura failure.")
 }
 
+// PinHash alias to *Infura.PinHash, the purpose is to be backwards
+// compatible with the original function.
 func PinHash(hash string) (bool, error) {
+	return (&Infura{}).PinHash(hash)
+}
+
+// PinHash pins content to Infura by giving an IPFS hash, it returns the result and an error.
+func (inf *Infura) PinHash(hash string) (bool, error) {
 	if hash == "" {
 		return false, fmt.Errorf("HASH: %s is invalid.", hash)
 	}
 
-	uri := fmt.Sprintf("%s://%s:%d/api/v0/pin/add?arg=%s", INFURA_PROTOCAL, INFURA_HOST, INFURA_PORT, hash)
-	resp, err := http.Get(uri)
+	endpoint := fmt.Sprintf("%s/api/v0/pin/add?arg=%s", api, hash)
+	req, err := http.NewRequest(http.MethodPost, endpoint, nil)
+	if err != nil {
+		return false, err
+	}
+	if inf.ProjectID != "" && inf.ProjectSecret != "" {
+		req.Header.Add("Authorization", "Basic "+basicAuth(inf.ProjectID, inf.ProjectSecret))
+	}
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return false, err
 	}
 	defer resp.Body.Close()
+
+	// It limits anonymous requests to 12 write requests/min.
+	// https://infura.io/docs/ipfs#section/Rate-Limits/API-Anonymous-Requests
+	if resp.StatusCode != http.StatusOK {
+		return false, fmt.Errorf(resp.Status)
+	}
 
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -92,6 +192,9 @@ func PinHash(hash string) (bool, error) {
 
 	var dat map[string]interface{}
 	if err := json.Unmarshal(data, &dat); err != nil {
+		if e, ok := err.(*json.SyntaxError); ok {
+			return false, fmt.Errorf("json syntax error at byte offset %d", e.Offset)
+		}
 		return false, err
 	}
 
@@ -100,4 +203,9 @@ func PinHash(hash string) (bool, error) {
 	}
 
 	return false, fmt.Errorf("Pin hash to Infura failure.")
+}
+
+func basicAuth(projectID, projectSecret string) string {
+	auth := projectID + ":" + projectSecret
+	return base64.StdEncoding.EncodeToString([]byte(auth))
 }
