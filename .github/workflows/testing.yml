@@ -2,10 +2,24 @@ name: Testing
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - "*"
+    paths:
+      - "**/*.go"
+      - "go.mod"
+      - "go.sum"
+      - ".github/workflows/testing.yml"
+      - "Makefile"
   pull_request:
     branches: [ main ]
     types: [ opened, synchronize, reopened ]
+    paths:
+      - "**/*.go"
+      - "go.mod"
+      - "go.sum"
+      - ".github/workflows/testing.yml"
+      - "Makefile"
+  workflow_dispatch:
 
 permissions: write-all
 jobs:
