@@ -10,9 +10,9 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/wabarc/helper"
+	httpretry "github.com/wabarc/ipfs-pinner/http"
 )
 
 const (
@@ -110,9 +110,7 @@ func (p *Pinata) pinFile(r *io.PipeReader, m *multipart.Writer) (string, error) 
 	req.Header.Add("pinata_secret_api_key", p.Secret)
 	req.Header.Add("pinata_api_key", p.Apikey)
 
-	client := &http.Client{
-		Timeout: 30 * time.Second,
-	}
+	client := httpretry.NewClient(nil)
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", err
@@ -158,9 +156,7 @@ func (p *Pinata) PinHash(hash string) (bool, error) {
 	req.Header.Add("pinata_secret_api_key", p.Secret)
 	req.Header.Add("pinata_api_key", p.Apikey)
 
-	client := &http.Client{
-		Timeout: 30 * time.Second,
-	}
+	client := httpretry.NewClient(nil)
 	resp, err := client.Do(req)
 	if err != nil {
 		return false, err
