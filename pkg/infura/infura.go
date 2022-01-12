@@ -10,9 +10,9 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/wabarc/helper"
+	httpretry "github.com/wabarc/ipfs-pinner/http"
 )
 
 const api = "https://ipfs.infura.io:5001"
@@ -107,9 +107,9 @@ func (inf *Infura) PinWithBytes(buf []byte) (string, error) {
 
 func (inf *Infura) pinFile(r *io.PipeReader, m *multipart.Writer) (string, error) {
 	endpoint := api + "/api/v0/add"
-	client := &http.Client{
-		Timeout: 30 * time.Second,
-	}
+	client := httpretry.NewClient(nil)
+	// client.Timeout = 30 * time.Second
+
 	req, err := http.NewRequest(http.MethodPost, endpoint, r)
 	if err != nil {
 		return "", err
@@ -170,9 +170,7 @@ func (inf *Infura) PinHash(hash string) (bool, error) {
 	if inf.ProjectID != "" && inf.ProjectSecret != "" {
 		req.Header.Add("Authorization", "Basic "+basicAuth(inf.ProjectID, inf.ProjectSecret))
 	}
-	client := &http.Client{
-		Timeout: 30 * time.Second,
-	}
+	client := httpretry.NewClient(nil)
 	resp, err := client.Do(req)
 	if err != nil {
 		return false, err
