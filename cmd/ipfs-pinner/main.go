@@ -28,7 +28,7 @@ func main() {
 		fmt.Fprint(os.Stderr, "\n")
 	}
 
-	flag.StringVar(&target, "t", "infura", "IPFS pinner, supports pinners: infura, pinata, nftstorage.")
+	flag.StringVar(&target, "t", "infura", "IPFS pinner, supports pinners: infura, pinata, nftstorage, web3storage.")
 	flag.StringVar(&apikey, "u", "", "Pinner apikey or username.")
 	flag.StringVar(&secret, "p", "", "Pinner sceret or password.")
 
@@ -42,12 +42,12 @@ func main() {
 		apikey = os.Getenv("IPFS_PINNER_PINATA_API_KEY")
 		secret = os.Getenv("IPFS_PINNER_PINATA_SECRET_API_KEY")
 		if apikey == "" || secret == "" {
-			fmt.Print("Pinata require IPFS_PINNER_PINATA_API_KEY and IPFS_PINNER_PINATA_SECRET_API_KEY environment variables.\n\n")
+			fmt.Println("Pinata require IPFS_PINNER_PINATA_API_KEY and IPFS_PINNER_PINATA_SECRET_API_KEY environment variables.")
 			os.Exit(1)
 		}
-	case "nftstorage":
+	case "nftstorage", "web3storage":
 		if apikey == "" {
-			fmt.Print("NFT.Storage requires an apikey.\n\n")
+			fmt.Println(target + " requires an apikey.")
 			os.Exit(1)
 		}
 	case "infura":

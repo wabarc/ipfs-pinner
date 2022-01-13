@@ -7,6 +7,7 @@ import (
 
 	"github.com/wabarc/ipfs-pinner/pkg/infura"
 	"github.com/wabarc/ipfs-pinner/pkg/nftstorage"
+	"github.com/wabarc/ipfs-pinner/pkg/web3storage"
 	"github.com/wabarc/ipfs-pinner/pkg/pinata"
 )
 
@@ -40,6 +41,9 @@ func (cfg *Config) Pin(file interface{}) (cid string, err error) {
 		case "nftstorage":
 			nft := &nftstorage.NFTStorage{Apikey: cfg.Apikey}
 			cid, err = nft.PinFile(v)
+		case "web3storage":
+			web3 := &web3storage.Web3Storage{Apikey: cfg.Apikey}
+			cid, err = web3.PinFile(v)
 		}
 	case io.Reader:
 		switch cfg.Pinner {
@@ -54,6 +58,9 @@ func (cfg *Config) Pin(file interface{}) (cid string, err error) {
 		case "nftstorage":
 			nft := &nftstorage.NFTStorage{Apikey: cfg.Apikey}
 			cid, err = nft.PinWithReader(v)
+		case "web3storage":
+			web3 := &web3storage.Web3Storage{Apikey: cfg.Apikey}
+			cid, err = web3.PinWithReader(v)
 		}
 	case []byte:
 		switch cfg.Pinner {
@@ -68,6 +75,9 @@ func (cfg *Config) Pin(file interface{}) (cid string, err error) {
 		case "nftstorage":
 			nft := &nftstorage.NFTStorage{Apikey: cfg.Apikey}
 			cid, err = nft.PinWithBytes(v)
+		case "web3storage":
+			web3 := &web3storage.Web3Storage{Apikey: cfg.Apikey}
+			cid, err = web3.PinWithBytes(v)
 		}
 	default:
 		return "", errors.New("unhandled file")

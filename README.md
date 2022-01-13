@@ -173,6 +173,42 @@ func main() {
 }
 ```
 
+#### [Web3.Storage](https://web3.storage)
+
+Web3.Storage is a service to make building on top of Filecoin as easy as
+possible - giving the developers the power of open, distributed networks via
+a friendly JS client library. Behind the scenes, Web3.Storage is backed by
+Filecoin and makes content available via IPFS leveraging the unique
+properties of each network.
+
+##### How to enable
+
+Command-line:
+
+Use flag `-p web3storage`.
+```sh
+ipfs-pinner -p web3storage file-to-path
+```
+
+Go package:
+```go
+import (
+        "fmt"
+
+        "github.com/wabarc/ipfs-pinner/pkg/web3storage"
+)
+
+func main() {
+        web3 := web3storage.Web3Storage{Apikey: "your api key"}
+        cid, err := web3.PinFile("file-to-path");
+        if err != nil {
+                fmt.Sprintln(err)
+                return
+        }
+        fmt.Println(cid)
+}
+```
+
 ## License
 
 Permissive GPL 3.0 license, see the [LICENSE](https://github.com/wabarc/ipfs-pinner/blob/main/LICENSE) file for details.
