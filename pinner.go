@@ -8,6 +8,7 @@ import (
 	"github.com/wabarc/ipfs-pinner/pkg/infura"
 	"github.com/wabarc/ipfs-pinner/pkg/nftstorage"
 	"github.com/wabarc/ipfs-pinner/pkg/pinata"
+	"github.com/wabarc/ipfs-pinner/pkg/web3storage"
 )
 
 // Config represents pinner's configuration. Pinner is the identifier of
@@ -23,6 +24,7 @@ type Config struct {
 // memory or on disk. If stored on disk, it's underlying concrete type should
 // be a file path. If it is in memory, it should be an *io.Reader or byte slice.
 func (cfg *Config) Pin(file interface{}) (cid string, err error) {
+	// TODO using generics
 	errPinner := errors.New("unknown pinner")
 	switch v := file.(type) {
 	case string:
@@ -40,6 +42,9 @@ func (cfg *Config) Pin(file interface{}) (cid string, err error) {
 		case "nftstorage":
 			nft := &nftstorage.NFTStorage{Apikey: cfg.Apikey}
 			cid, err = nft.PinFile(v)
+		case "web3storage":
+			web3 := &web3storage.Web3Storage{Apikey: cfg.Apikey}
+			cid, err = web3.PinFile(v)
 		}
 	case io.Reader:
 		switch cfg.Pinner {
@@ -54,6 +59,9 @@ func (cfg *Config) Pin(file interface{}) (cid string, err error) {
 		case "nftstorage":
 			nft := &nftstorage.NFTStorage{Apikey: cfg.Apikey}
 			cid, err = nft.PinWithReader(v)
+		case "web3storage":
+			web3 := &web3storage.Web3Storage{Apikey: cfg.Apikey}
+			cid, err = web3.PinWithReader(v)
 		}
 	case []byte:
 		switch cfg.Pinner {
@@ -68,6 +76,9 @@ func (cfg *Config) Pin(file interface{}) (cid string, err error) {
 		case "nftstorage":
 			nft := &nftstorage.NFTStorage{Apikey: cfg.Apikey}
 			cid, err = nft.PinWithBytes(v)
+		case "web3storage":
+			web3 := &web3storage.Web3Storage{Apikey: cfg.Apikey}
+			cid, err = web3.PinWithBytes(v)
 		}
 	default:
 		return "", errors.New("unhandled file")
