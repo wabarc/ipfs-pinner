@@ -6,16 +6,16 @@ import (
 	"os"
 	"strings"
 
-	Pinner "github.com/wabarc/ipfs-pinner"
+	pinner "github.com/wabarc/ipfs-pinner"
 )
 
-var (
-	pinner string
-	apikey string
-	secret string
-)
+func main() {
+	var (
+		target string
+		apikey string
+		secret string
+	)
 
-func init() {
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage:\n\n")
 		fmt.Fprintf(os.Stderr, "  ipfs-pinner [options] [file1] ... [fileN]\n\n")
@@ -28,32 +28,38 @@ func init() {
 		fmt.Fprint(os.Stderr, "\n")
 	}
 
-	flag.StringVar(&pinner, "p", "infura", "IPFS pinner, supports pinners: infura, pinata.")
-	// flag.StringVar(&apikey, "u", "", "Pinner apikey or username.")
-	// flag.StringVar(&secret, "P", "", "Pinner sceret or password.")
+	flag.StringVar(&target, "t", "infura", "IPFS pinner, supports pinners: infura, pinata, nftstorage.")
+	flag.StringVar(&apikey, "u", "", "Pinner apikey or username.")
+	flag.StringVar(&secret, "p", "", "Pinner sceret or password.")
 
 	flag.Parse()
 
-	args := flag.Args()
+	files := flag.Args()
+	target = strings.ToLower(target)
 
-	if strings.ToLower(pinner) == "pinata" {
+	switch target {
+	case "pinata":
 		apikey = os.Getenv("IPFS_PINNER_PINATA_API_KEY")
 		secret = os.Getenv("IPFS_PINNER_PINATA_SECRET_API_KEY")
 		if apikey == "" || secret == "" {
 			fmt.Print("Pinata require IPFS_PINNER_PINATA_API_KEY and IPFS_PINNER_PINATA_SECRET_API_KEY environment variables.\n\n")
-			basePrint()
-			os.Exit(0)
+			os.Exit(1)
 		}
-	}
-	if len(args) < 1 {
+	case "nftstorage":
+		if apikey == "" {
+			fmt.Print("NFT.Storage requires an apikey.\n\n")
+			os.Exit(1)
+		}
+	case "infura":
+		// Permit request without authorization
+	default:
 		basePrint()
 		os.Exit(0)
 	}
-
-}
-
-func main() {
-	files := flag.Args()
+	if len(files) < 1 {
+		fmt.Println("file path is missing.")
+		os.Exit(1)
+	}
 
 	for _, path := range files {
 		if _, err := os.Stat(path); err != nil {
@@ -61,7 +67,7 @@ func main() {
 			continue
 		}
 
-		handle := Pinner.Config{Pinner: pinner, Apikey: apikey, Secret: secret}
+		handle := pinner.Config{Pinner: target, Apikey: apikey, Secret: secret}
 		cid, err := handle.Pin(path)
 
 		if err != nil {

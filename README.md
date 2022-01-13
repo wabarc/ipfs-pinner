@@ -137,6 +137,42 @@ func main() {
         fmt.Println(cid)
 }
 ```
+
+#### [NFT.Storage](https://nft.storage)
+
+NFT.Storage is a long-term storage service designed for off-chain NFT data
+(like metadata, images, and other assets) for up to 31GiB in size. Data is
+content addressed using IPFS, meaning the URL pointing to a piece of data
+(“ipfs://…”) is completely unique to that data.
+
+##### How to enable
+
+Command-line:
+
+Use flag `-p nftstorage`.
+```sh
+ipfs-pinner -p nftstorage file-to-path
+```
+
+Go package:
+```go
+import (
+        "fmt"
+
+        "github.com/wabarc/ipfs-pinner/pkg/nftstorage"
+)
+
+func main() {
+        nft := nftstorage.NFTStorage{Apikey: "your api key"}
+        cid, err := nft.PinFile("file-to-path");
+        if err != nil {
+                fmt.Sprintln(err)
+                return
+        }
+        fmt.Println(cid)
+}
+```
+
 ## License
 
 Permissive GPL 3.0 license, see the [LICENSE](https://github.com/wabarc/ipfs-pinner/blob/main/LICENSE) file for details.

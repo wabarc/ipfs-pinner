@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/wabarc/ipfs-pinner/pkg/infura"
+	"github.com/wabarc/ipfs-pinner/pkg/nftstorage"
 	"github.com/wabarc/ipfs-pinner/pkg/pinata"
 )
 
@@ -36,6 +37,9 @@ func (cfg *Config) Pin(file interface{}) (cid string, err error) {
 		case "pinata":
 			pnt := &pinata.Pinata{Apikey: cfg.Apikey, Secret: cfg.Secret}
 			cid, err = pnt.PinFile(v)
+		case "nftstorage":
+			nft := &nftstorage.NFTStorage{Apikey: cfg.Apikey}
+			cid, err = nft.PinFile(v)
 		}
 	case io.Reader:
 		switch cfg.Pinner {
@@ -47,6 +51,9 @@ func (cfg *Config) Pin(file interface{}) (cid string, err error) {
 		case "pinata":
 			pnt := &pinata.Pinata{Apikey: cfg.Apikey, Secret: cfg.Secret}
 			cid, err = pnt.PinWithReader(v)
+		case "nftstorage":
+			nft := &nftstorage.NFTStorage{Apikey: cfg.Apikey}
+			cid, err = nft.PinWithReader(v)
 		}
 	case []byte:
 		switch cfg.Pinner {
@@ -58,6 +65,9 @@ func (cfg *Config) Pin(file interface{}) (cid string, err error) {
 		case "pinata":
 			pnt := &pinata.Pinata{Apikey: cfg.Apikey, Secret: cfg.Secret}
 			cid, err = pnt.PinWithBytes(v)
+		case "nftstorage":
+			nft := &nftstorage.NFTStorage{Apikey: cfg.Apikey}
+			cid, err = nft.PinWithBytes(v)
 		}
 	default:
 		return "", errors.New("unhandled file")
