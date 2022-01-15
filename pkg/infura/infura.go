@@ -22,6 +22,8 @@ const api = "https://ipfs.infura.io:5001"
 type Infura struct {
 	ProjectID     string
 	ProjectSecret string
+
+	client *http.Client
 }
 
 // PinFile alias to *Infura.PinFile, the purpose is to be backwards
@@ -107,7 +109,7 @@ func (inf *Infura) PinWithBytes(buf []byte) (string, error) {
 
 func (inf *Infura) pinFile(r *io.PipeReader, m *multipart.Writer) (string, error) {
 	endpoint := api + "/api/v0/add"
-	client := httpretry.NewClient(nil)
+	client := httpretry.NewClient(inf.client)
 	// client.Timeout = 30 * time.Second
 
 	req, err := http.NewRequest(http.MethodPost, endpoint, r)
@@ -170,7 +172,7 @@ func (inf *Infura) PinHash(hash string) (bool, error) {
 	if inf.ProjectID != "" && inf.ProjectSecret != "" {
 		req.Header.Add("Authorization", "Basic "+basicAuth(inf.ProjectID, inf.ProjectSecret))
 	}
-	client := httpretry.NewClient(nil)
+	client := httpretry.NewClient(inf.client)
 	resp, err := client.Do(req)
 	if err != nil {
 		return false, err
@@ -196,7 +198,7 @@ func (inf *Infura) PinHash(hash string) (bool, error) {
 		return false, err
 	}
 
-	if h, ok := dat["Pins"].([]interface{}); ok {
+	if h, ok := dat["Pins"].([]interface{}); ok && len(h) > 0 {
 		return h[0] == hash, nil
 	}
 
