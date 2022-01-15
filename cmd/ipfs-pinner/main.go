@@ -38,19 +38,19 @@ func main() {
 	target = strings.ToLower(target)
 
 	switch target {
-	case "pinata":
+	case pinner.Pinata:
 		apikey = os.Getenv("IPFS_PINNER_PINATA_API_KEY")
 		secret = os.Getenv("IPFS_PINNER_PINATA_SECRET_API_KEY")
 		if apikey == "" || secret == "" {
 			fmt.Println("Pinata require IPFS_PINNER_PINATA_API_KEY and IPFS_PINNER_PINATA_SECRET_API_KEY environment variables.")
 			os.Exit(1)
 		}
-	case "nftstorage", "web3storage":
+	case pinner.NFTStorage, pinner.Web3Storage:
 		if apikey == "" {
 			fmt.Println(target + " requires an apikey.")
 			os.Exit(1)
 		}
-	case "infura":
+	case pinner.Infura:
 		// Permit request without authorization
 	default:
 		basePrint()

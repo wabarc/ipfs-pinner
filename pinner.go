@@ -11,6 +11,13 @@ import (
 	"github.com/wabarc/ipfs-pinner/pkg/web3storage"
 )
 
+const (
+	Infura      = "infura"
+	Pinata      = "pinata"
+	NFTStorage  = "nftstorage"
+	Web3Storage = "web3storage"
+)
+
 // Config represents pinner's configuration. Pinner is the identifier of
 // the target IPFS service.
 type Config struct {
@@ -34,15 +41,15 @@ func (cfg *Config) Pin(file interface{}) (cid string, err error) {
 		switch cfg.Pinner {
 		default:
 			err = errPinner
-		case "infura":
+		case Infura:
 			cid, err = infura.PinFile(v)
-		case "pinata":
+		case Pinata:
 			pnt := &pinata.Pinata{Apikey: cfg.Apikey, Secret: cfg.Secret}
 			cid, err = pnt.PinFile(v)
-		case "nftstorage":
+		case NFTStorage:
 			nft := &nftstorage.NFTStorage{Apikey: cfg.Apikey}
 			cid, err = nft.PinFile(v)
-		case "web3storage":
+		case Web3Storage:
 			web3 := &web3storage.Web3Storage{Apikey: cfg.Apikey}
 			cid, err = web3.PinFile(v)
 		}
@@ -50,16 +57,16 @@ func (cfg *Config) Pin(file interface{}) (cid string, err error) {
 		switch cfg.Pinner {
 		default:
 			err = errPinner
-		case "infura":
+		case Infura:
 			inf := infura.Infura{ProjectID: cfg.Apikey, ProjectSecret: cfg.Secret}
 			cid, err = inf.PinWithReader(v)
-		case "pinata":
+		case Pinata:
 			pnt := &pinata.Pinata{Apikey: cfg.Apikey, Secret: cfg.Secret}
 			cid, err = pnt.PinWithReader(v)
-		case "nftstorage":
+		case NFTStorage:
 			nft := &nftstorage.NFTStorage{Apikey: cfg.Apikey}
 			cid, err = nft.PinWithReader(v)
-		case "web3storage":
+		case Web3Storage:
 			web3 := &web3storage.Web3Storage{Apikey: cfg.Apikey}
 			cid, err = web3.PinWithReader(v)
 		}
@@ -67,16 +74,16 @@ func (cfg *Config) Pin(file interface{}) (cid string, err error) {
 		switch cfg.Pinner {
 		default:
 			err = errPinner
-		case "infura":
+		case Infura:
 			inf := infura.Infura{ProjectID: cfg.Apikey, ProjectSecret: cfg.Secret}
 			cid, err = inf.PinWithBytes(v)
-		case "pinata":
+		case Pinata:
 			pnt := &pinata.Pinata{Apikey: cfg.Apikey, Secret: cfg.Secret}
 			cid, err = pnt.PinWithBytes(v)
-		case "nftstorage":
+		case NFTStorage:
 			nft := &nftstorage.NFTStorage{Apikey: cfg.Apikey}
 			cid, err = nft.PinWithBytes(v)
-		case "web3storage":
+		case Web3Storage:
 			web3 := &web3storage.Web3Storage{Apikey: cfg.Apikey}
 			cid, err = web3.PinWithBytes(v)
 		}
