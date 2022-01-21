@@ -4,11 +4,14 @@ import (
 	"bytes"
 	"io"
 	"io/ioutil"
+	"mime"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"strings"
 	"testing"
 
+	"github.com/ipfs/go-cid"
 	"github.com/wabarc/helper"
 )
 
@@ -35,10 +38,30 @@ func handleResponse(w http.ResponseWriter, r *http.Request) {
 	}
 	switch r.URL.Path {
 	case "/upload":
-		_, _ = w.Write([]byte(uploadJSON))
-	default:
-		_, _ = w.Write([]byte(badRequestJSON))
+		_ = r.ParseMultipartForm(32 << 20)
+		_, params, parseErr := mime.ParseMediaType(r.Header.Get("Content-Type"))
+		if parseErr != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write([]byte(badRequestJSON))
+			return
+		}
+
+		multipartReader := multipart.NewReader(r.Body, params["boundary"])
+		defer r.Body.Close()
+
+		// Pin directory
+		if len(r.MultipartForm.File["file"]) > 1 && multipartReader != nil {
+			_, _ = w.Write([]byte(uploadJSON))
+			return
+		}
+		// Pin file
+		if len(r.MultipartForm.File["file"]) > 0 {
+			_, _ = w.Write([]byte(uploadJSON))
+			return
+		}
 	}
+	w.WriteHeader(http.StatusBadRequest)
+	_, _ = w.Write([]byte(badRequestJSON))
 }
 
 func TestPinFile(t *testing.T) {
@@ -78,11 +101,12 @@ func TestPinWithReader(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	fr, _ := os.Open(tmpfile.Name())
 	tests := []struct {
 		name string
 		file interface{}
 	}{
-		{"os.File", tmpfile},
+		{"os.File", fr},
 		{"strings.Reader", strings.NewReader(helper.RandString(6, "lower"))},
 		{"bytes.Buffer", bytes.NewBufferString(helper.RandString(6, "lower"))},
 	}
@@ -110,7 +134,43 @@ func TestPinWithBytes(t *testing.T) {
 	}
 }
 
+func TestPinDir(t *testing.T) {
+	dir, err := ioutil.TempDir("", "ipfs-pinner-dir-")
+	if err != nil {
+		t.Fatalf("Unexpected create directory: %v", err)
+	}
+	defer os.RemoveAll(dir)
+
+	// Create files
+	for i := 1; i <= 2; i++ {
+		f, err := ioutil.TempFile(dir, "file-")
+		if err != nil {
+			t.Fatal("Unexpected create file")
+		}
+		content := []byte(helper.RandString(6, "lower"))
+		if _, err := f.Write(content); err != nil {
+			t.Fatal("Unexpected write content to file")
+		}
+	}
+
+	httpClient, mux, server := helper.MockServer()
+	mux.HandleFunc("/", handleResponse)
+	defer server.Close()
+
+	web3 := &Web3Storage{Apikey: "fake-web3-storage-apikey", client: httpClient}
+	o, err := web3.PinDir(dir)
+	if err != nil {
+		t.Fatalf("Unexpected pin directory: %v", err)
+	}
+	_, err = cid.Parse(o)
+	if err != nil {
+		t.Fatalf("Invalid cid: %v", o)
+	}
+}
+
 func TestPinHash(t *testing.T) {
+	t.Skip("Not yet supported")
+
 	httpClient, mux, server := helper.MockServer()
 	mux.HandleFunc("/", handleResponse)
 	defer server.Close()

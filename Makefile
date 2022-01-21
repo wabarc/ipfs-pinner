@@ -111,7 +111,6 @@ clean: ## Clean workspace
 	rm -rf data-dir*
 	rm -rf coverage*
 	rm -rf *.out
-	rm -rf ipfs-pinner.db
 
 fmt: ## Format codebase
 	@echo "-> Running go fmt"

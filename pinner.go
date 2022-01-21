@@ -30,12 +30,14 @@ type Config struct {
 // is an interface to access the file. It's contents may be either stored in
 // memory or on disk. If stored on disk, it's underlying concrete type should
 // be a file path. If it is in memory, it should be an *io.Reader or byte slice.
-func (cfg *Config) Pin(file interface{}) (cid string, err error) {
+//nolint:gocyclo
+func (cfg *Config) Pin(path interface{}) (cid string, err error) {
 	// TODO using generics
 	errPinner := errors.New("unknown pinner")
-	switch v := file.(type) {
+	switch v := path.(type) {
 	case string:
-		if _, err := os.Stat(v); err != nil {
+		_, err := os.Lstat(v)
+		if err != nil {
 			return "", err
 		}
 		switch cfg.Pinner {

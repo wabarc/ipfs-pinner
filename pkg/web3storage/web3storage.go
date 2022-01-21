@@ -7,10 +7,10 @@ import (
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
-	"os"
-	"path/filepath"
 
 	"github.com/wabarc/helper"
+	"github.com/wabarc/ipfs-pinner/file"
+
 	httpretry "github.com/wabarc/ipfs-pinner/http"
 )
 
@@ -23,33 +23,26 @@ type Web3Storage struct {
 	client *http.Client
 }
 
+type addEvent struct {
+	Cid string
+}
+
 // PinFile pins content to Web3Storage by providing a file path, it returns an IPFS
 // hash and an error.
 func (web3 *Web3Storage) PinFile(fp string) (string, error) {
-	file, err := os.Open(fp)
+	f, err := file.NewSerialFile(fp)
 	if err != nil {
 		return "", err
 	}
-	defer file.Close()
+	f.MapDirectory(helper.RandString(32, "lower"))
 
-	r, w := io.Pipe()
-	m := multipart.NewWriter(w)
+	mfr, err := file.CreateMultiForm(f, true)
+	if err != nil {
+		return "", err
+	}
+	boundary := "multipart/form-data; boundary=" + mfr.Boundary()
 
-	go func() {
-		defer w.Close()
-		defer m.Close()
-
-		part, err := m.CreateFormFile("file", filepath.Base(file.Name()))
-		if err != nil {
-			return
-		}
-
-		if _, err = io.Copy(part, file); err != nil {
-			return
-		}
-	}()
-
-	return web3.pinFile(r, m)
+	return web3.pinFile(mfr, boundary)
 }
 
 // PinWithReader pins content to Web3Storage by given io.Reader, it returns an IPFS hash and an error.
@@ -72,7 +65,7 @@ func (web3 *Web3Storage) PinWithReader(rd io.Reader) (string, error) {
 		}
 	}()
 
-	return web3.pinFile(r, m)
+	return web3.pinFile(r, m.FormDataContentType())
 }
 
 // PinWithBytes pins content to Web3Storage by given byte slice, it returns an IPFS hash and an error.
@@ -95,20 +88,18 @@ func (web3 *Web3Storage) PinWithBytes(buf []byte) (string, error) {
 		}
 	}()
 
-	return web3.pinFile(r, m)
+	return web3.pinFile(r, m.FormDataContentType())
 }
 
-func (web3 *Web3Storage) pinFile(r *io.PipeReader, m *multipart.Writer) (string, error) {
+func (web3 *Web3Storage) pinFile(r io.Reader, boundary string) (string, error) {
 	endpoint := api + "/upload"
 
 	req, err := http.NewRequest(http.MethodPost, endpoint, r)
 	if err != nil {
 		return "", err
 	}
-	req.Header.Add("Content-Type", m.FormDataContentType())
-	if web3.Apikey != "" {
-		req.Header.Add("Authorization", "Bearer "+web3.Apikey)
-	}
+	req.Header.Add("Content-Type", boundary)
+	req.Header.Add("Authorization", "Bearer "+web3.Apikey)
 	client := httpretry.NewClient(web3.client)
 	resp, err := client.Do(req)
 	if err != nil {
@@ -125,23 +116,25 @@ func (web3 *Web3Storage) pinFile(r *io.PipeReader, m *multipart.Writer) (string,
 		return "", err
 	}
 
-	var dat map[string]interface{}
-	if err := json.Unmarshal(data, &dat); err != nil {
+	var out addEvent
+	if err := json.Unmarshal(data, &out); err != nil {
 		if e, ok := err.(*json.SyntaxError); ok {
 			return "", fmt.Errorf("json syntax error at byte offset %d", e.Offset)
 		}
 		return "", err
 	}
 
-	if cid, ok := dat["cid"].(string); ok {
-		return cid, nil
-	}
-
-	return "", fmt.Errorf("Pin file to Web3Storage failure.")
+	return out.Cid, nil
 }
 
 // PinHash pins content to Web3Storage by giving an IPFS hash, it returns the result and an error.
 // Note: unsupported
 func (web3 *Web3Storage) PinHash(hash string) (bool, error) {
-	return true, nil
+	return false, fmt.Errorf("not yet supported")
+}
+
+// PinDir pins a directory to the Pinata pinning service.
+// It alias to PinFile.
+func (web3 *Web3Storage) PinDir(name string) (string, error) {
+	return web3.PinFile(name)
 }

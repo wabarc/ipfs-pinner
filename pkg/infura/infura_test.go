@@ -4,13 +4,17 @@ import (
 	"bytes"
 	"io"
 	"io/ioutil"
+	"mime"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"strings"
 	"sync/atomic"
 	"testing"
 
+	"github.com/ipfs/go-cid"
 	"github.com/wabarc/helper"
+	"github.com/wabarc/ipfs-pinner/file"
 )
 
 var (
@@ -40,14 +44,36 @@ func handleResponse(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte(unauthorizedJSON))
 		return
 	}
+
 	switch r.URL.Path {
 	case "/api/v0/add":
-		_, _ = w.Write([]byte(addJSON))
+		_ = r.ParseMultipartForm(32 << 20)
+		_, params, parseErr := mime.ParseMediaType(r.Header.Get("Content-Type"))
+		if parseErr != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write([]byte(badRequestJSON))
+			return
+		}
+
+		multipartReader := multipart.NewReader(r.Body, params["boundary"])
+		defer r.Body.Close()
+
+		// Pin directory
+		if len(r.MultipartForm.File) == 0 && multipartReader != nil {
+			_, _ = w.Write([]byte(addJSON))
+			return
+		}
+		// Pin file
+		if len(r.MultipartForm.File["file"]) > 0 {
+			_, _ = w.Write([]byte(addJSON))
+			return
+		}
 	case "/api/v0/pin/add":
 		_, _ = w.Write([]byte(pinHashJSON))
-	default:
-		_, _ = w.Write([]byte(badRequestJSON))
+		return
 	}
+	w.WriteHeader(http.StatusBadRequest)
+	_, _ = w.Write([]byte(badRequestJSON))
 }
 
 func TestPinFile(t *testing.T) {
@@ -67,8 +93,13 @@ func TestPinFile(t *testing.T) {
 	}
 
 	inf := &Infura{projectID, projectSecret, httpClient}
-	if _, err := inf.PinFile(tmpfile.Name()); err != nil {
-		t.Error(err)
+	o, err := inf.PinFile(tmpfile.Name())
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = cid.Parse(o)
+	if err != nil {
+		t.Fatalf("Invalid cid: %v", o)
 	}
 }
 
@@ -87,11 +118,12 @@ func TestPinWithReader(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	fr, _ := os.Open(tmpfile.Name())
 	tests := []struct {
 		name string
 		file interface{}
 	}{
-		{"os.File", tmpfile},
+		{"os.File", fr},
 		{"strings.Reader", strings.NewReader(helper.RandString(6, "lower"))},
 		{"bytes.Buffer", bytes.NewBufferString(helper.RandString(6, "lower"))},
 	}
@@ -100,8 +132,13 @@ func TestPinWithReader(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			file := test.file.(io.Reader)
-			if _, err := inf.PinWithReader(file); err != nil {
-				t.Error(err)
+			o, err := inf.PinWithReader(file)
+			if err != nil {
+				t.Fatal(err)
+			}
+			_, err = cid.Parse(o)
+			if err != nil {
+				t.Fatalf("Invalid cid: %v", o)
 			}
 		})
 	}
@@ -114,8 +151,13 @@ func TestPinWithBytes(t *testing.T) {
 
 	inf := &Infura{projectID, projectSecret, httpClient}
 	buf := []byte(helper.RandString(6, "lower"))
-	if _, err := inf.PinWithBytes(buf); err != nil {
-		t.Error(err)
+	o, err := inf.PinWithBytes(buf)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = cid.Parse(o)
+	if err != nil {
+		t.Fatalf("Invalid cid: %v", o)
 	}
 }
 
@@ -129,6 +171,44 @@ func TestPinHash(t *testing.T) {
 	inf := &Infura{projectID, projectSecret, httpClient}
 	if ok, err := inf.PinHash(hash); !ok || err != nil {
 		t.Error(err)
+	}
+}
+
+func TestPinDir(t *testing.T) {
+	dir, err := ioutil.TempDir("", "ipfs-pinner-dir-")
+	if err != nil {
+		t.Fatalf("Unexpected create directory: %v", err)
+	}
+	defer os.RemoveAll(dir)
+
+	// Create files
+	for i := 1; i <= 2; i++ {
+		f, err := ioutil.TempFile(dir, "file-")
+		if err != nil {
+			t.Fatal("Unexpected create file")
+		}
+		content := []byte(helper.RandString(6, "lower"))
+		if _, err := f.Write(content); err != nil {
+			t.Fatal("Unexpected write content to file")
+		}
+	}
+
+	httpClient, mux, server := helper.MockServer()
+	mux.HandleFunc("/", handleResponse)
+	defer server.Close()
+
+	body, err := file.NewMultiFileReader(dir, false)
+	if err != nil {
+		t.Fatalf("Unexpected creates multipart file")
+	}
+	inf := &Infura{projectID, projectSecret, httpClient}
+	o, err := inf.PinDir(body)
+	if err != nil {
+		t.Fatalf("Unexpected pin directory: %v", err)
+	}
+	_, err = cid.Parse(o)
+	if err != nil {
+		t.Fatalf("Invalid cid: %v", o)
 	}
 }
 
@@ -163,7 +243,12 @@ func TestRateLimit(t *testing.T) {
 	}
 
 	inf := &Infura{projectID, projectSecret, httpClient}
-	if _, err := inf.PinFile(tmpfile.Name()); err != nil {
+	o, err := inf.PinFile(tmpfile.Name())
+	if err != nil {
 		t.Error(err)
+	}
+	_, err = cid.Parse(o)
+	if err != nil {
+		t.Fatalf("Invalid cid: %v", o)
 	}
 }

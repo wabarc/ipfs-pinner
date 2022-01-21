@@ -38,6 +38,7 @@ func TestPinFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	fr, _ := os.Open(tmpfile.Name())
 	tests := []struct {
 		pinner string
 		apikey string
@@ -45,7 +46,7 @@ func TestPinFile(t *testing.T) {
 		source string
 		file   interface{}
 	}{
-		{"infura", "", "", "os.File", tmpfile},
+		{"infura", "", "", "os.File", fr},
 		{"infura", "", "", "strings.Reader", strings.NewReader(helper.RandString(6, "lower"))},
 		{"infura", "", "", "bytes.Buffer", bytes.NewBufferString(helper.RandString(6, "lower"))},
 		{"pinata", pinataKey, pinataSec, "os.File", tmpfile},

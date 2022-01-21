@@ -17,33 +17,33 @@ func main() {
 	)
 
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage:\n\n")
-		fmt.Fprintf(os.Stderr, "  ipfs-pinner [options] [file1] ... [fileN]\n\n")
+		usage := `A CLI tool for pin files or directory to IPFS.
 
+Usage:
+
+  ipfs-pinner [flags] [path]...
+
+Flags:
+`
+		fmt.Fprintln(os.Stdout, usage)
 		flag.PrintDefaults()
-	}
-	var basePrint = func() {
-		fmt.Print("A CLI tool for pin files to IPFS.\n\n")
-		flag.Usage()
-		fmt.Fprint(os.Stderr, "\n")
+		fmt.Fprintln(os.Stdout, "")
 	}
 
 	flag.StringVar(&target, "t", "infura", "IPFS pinner, supports pinners: infura, pinata, nftstorage, web3storage.")
 	flag.StringVar(&apikey, "u", "", "Pinner apikey or username.")
 	flag.StringVar(&secret, "p", "", "Pinner sceret or password.")
-
 	flag.Parse()
 
 	files := flag.Args()
 	target = strings.ToLower(target)
-
 	switch target {
 	case pinner.Pinata:
-		apikey = os.Getenv("IPFS_PINNER_PINATA_API_KEY")
-		secret = os.Getenv("IPFS_PINNER_PINATA_SECRET_API_KEY")
-		if apikey == "" || secret == "" {
-			fmt.Println("Pinata require IPFS_PINNER_PINATA_API_KEY and IPFS_PINNER_PINATA_SECRET_API_KEY environment variables.")
-			os.Exit(1)
+		if apikey == "" {
+			apikey = os.Getenv("IPFS_PINNER_PINATA_API_KEY")
+		}
+		if secret == "" {
+			secret = os.Getenv("IPFS_PINNER_PINATA_SECRET_API_KEY")
 		}
 	case pinner.NFTStorage, pinner.Web3Storage:
 		if apikey == "" {
@@ -53,10 +53,11 @@ func main() {
 	case pinner.Infura:
 		// Permit request without authorization
 	default:
-		basePrint()
+		flag.Usage()
 		os.Exit(0)
 	}
 	if len(files) < 1 {
+		flag.Usage()
 		fmt.Println("file path is missing.")
 		os.Exit(1)
 	}

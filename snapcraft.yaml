@@ -2,7 +2,7 @@ name: ipfs-pinner
 
 version: 'git'
 
-summary: A toolkit to upload files to IPFS pinning services.
+summary: A toolkit to upload files or directory to IPFS pinning services.
 
 description: |
   ipfs-pinner is a toolkit to help upload files or specific content id to IPFS pinning services.
@@ -19,6 +19,19 @@ description: |
   Pinata is a freemium pinning service. It gives you more control over what's uploaded.
   You can delete, label and add custom metadata. This service requires signup. https://pinata.cloud/
   Usage：ipfs-pinner -p pinata file-to-path
+
+  3.NFT.Storage
+  NFT.Storage is a long-term storage service designed for off-chain NFT data
+  (like metadata, images, and other assets) for up to 31GiB in size. Data is
+  content addressed using IPFS, meaning the URL pointing to a piece of data
+  (“ipfs://…”) is completely unique to that data.
+
+  4.Web3.Storage
+  Web3.Storage is a service to make building on top of Filecoin as simple as
+  possible - giving the developers the power of open, distributed networks via
+  a friendly JS client library. Behind the scenes, Web3.Storage is backed by
+  Filecoin and makes content available via IPFS leveraging the unique
+  properties of each network.
 
 grade: stable
 
