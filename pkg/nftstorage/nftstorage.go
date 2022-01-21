@@ -1,16 +1,16 @@
 package nftstorage
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
-	"mime/multipart"
 	"net/http"
 	"os"
-	"path/filepath"
 
-	"github.com/wabarc/helper"
+	"github.com/wabarc/ipfs-pinner/file"
+
 	httpretry "github.com/wabarc/ipfs-pinner/http"
 )
 
@@ -23,92 +23,76 @@ type NFTStorage struct {
 	client *http.Client
 }
 
+type value struct {
+	Cid     string
+	Size    int64  `json:",omitempty"`
+	Created string `json:",omitempty"`
+	Type    string `json:",omitempty"`
+}
+
+type er struct {
+	Name, Message string
+}
+
+type addEvent struct {
+	Ok    bool
+	Value value
+	Error er
+}
+
 // PinFile pins content to NFTStorage by providing a file path, it returns an IPFS
 // hash and an error.
 func (nft *NFTStorage) PinFile(fp string) (string, error) {
-	file, err := os.Open(fp)
+	fi, err := os.Stat(fp)
 	if err != nil {
 		return "", err
 	}
-	defer file.Close()
 
-	r, w := io.Pipe()
-	m := multipart.NewWriter(w)
-
-	go func() {
-		defer w.Close()
-		defer m.Close()
-
-		part, err := m.CreateFormFile("file", filepath.Base(file.Name()))
+	// For regular file
+	if fi.Mode().IsRegular() {
+		f, err := os.Open(fp)
 		if err != nil {
-			return
+			return "", err
 		}
+		defer f.Close()
 
-		if _, err = io.Copy(part, file); err != nil {
-			return
-		}
-	}()
+		return nft.pinFile(f, file.MediaType(f))
+	}
 
-	return nft.pinFile(r, m)
+	// For directory, or etc
+	f, err := file.NewSerialFile(fp)
+	if err != nil {
+		return "", err
+	}
+
+	mfr, err := file.CreateMultiForm(f, true)
+	if err != nil {
+		return "", err
+	}
+	boundary := "multipart/form-data; boundary=" + mfr.Boundary()
+
+	return nft.pinFile(mfr, boundary)
 }
 
 // PinWithReader pins content to NFTStorage by given io.Reader, it returns an IPFS hash and an error.
 func (nft *NFTStorage) PinWithReader(rd io.Reader) (string, error) {
-	r, w := io.Pipe()
-	m := multipart.NewWriter(w)
-	fn := helper.RandString(6, "lower")
-
-	go func() {
-		defer w.Close()
-		defer m.Close()
-
-		part, err := m.CreateFormFile("file", fn)
-		if err != nil {
-			return
-		}
-
-		if _, err = io.Copy(part, rd); err != nil {
-			return
-		}
-	}()
-
-	return nft.pinFile(r, m)
+	return nft.pinFile(rd, file.MediaType(rd))
 }
 
 // PinWithBytes pins content to NFTStorage by given byte slice, it returns an IPFS hash and an error.
 func (nft *NFTStorage) PinWithBytes(buf []byte) (string, error) {
-	r, w := io.Pipe()
-	m := multipart.NewWriter(w)
-	fn := helper.RandString(6, "lower")
-
-	go func() {
-		defer w.Close()
-		defer m.Close()
-
-		part, err := m.CreateFormFile("file", fn)
-		if err != nil {
-			return
-		}
-
-		if _, err = part.Write(buf); err != nil {
-			return
-		}
-	}()
-
-	return nft.pinFile(r, m)
+	return nft.pinFile(bytes.NewReader(buf), file.MediaType(buf))
 }
 
-func (nft *NFTStorage) pinFile(r *io.PipeReader, m *multipart.Writer) (string, error) {
+func (nft *NFTStorage) pinFile(r io.Reader, boundary string) (string, error) {
 	endpoint := api + "/upload"
 
 	req, err := http.NewRequest(http.MethodPost, endpoint, r)
 	if err != nil {
 		return "", err
 	}
-	req.Header.Add("Content-Type", m.FormDataContentType())
-	if nft.Apikey != "" {
-		req.Header.Add("Authorization", "Bearer "+nft.Apikey)
-	}
+	req.Header.Add("Content-Type", boundary)
+	req.Header.Add("Authorization", "Bearer "+nft.Apikey)
 	client := httpretry.NewClient(nft.client)
 	resp, err := client.Do(req)
 	if err != nil {
@@ -125,30 +109,25 @@ func (nft *NFTStorage) pinFile(r *io.PipeReader, m *multipart.Writer) (string, e
 		return "", err
 	}
 
-	var dat map[string]interface{}
-	if err := json.Unmarshal(data, &dat); err != nil {
+	var out addEvent
+	if err := json.Unmarshal(data, &out); err != nil {
 		if e, ok := err.(*json.SyntaxError); ok {
 			return "", fmt.Errorf("json syntax error at byte offset %d", e.Offset)
 		}
 		return "", err
 	}
 
-	if ok := dat["ok"].(bool); !ok {
-		return "", fmt.Errorf("Pin file to NFTStorage failed.")
-	}
-	value, ok := dat["value"].(map[string]interface{})
-	if !ok {
-		return "", fmt.Errorf("Pin file to NFTStorage failed: no value")
-	}
-	if cid, ok := value["cid"].(string); ok {
-		return cid, nil
-	}
-
-	return "", fmt.Errorf("Pin file to NFTStorage failure.")
+	return out.Value.Cid, nil
 }
 
 // PinHash pins content to NFTStorage by giving an IPFS hash, it returns the result and an error.
 // Note: unsupported
 func (nft *NFTStorage) PinHash(hash string) (bool, error) {
-	return true, nil
+	return false, fmt.Errorf("not yet supported")
+}
+
+// PinDir pins a directory to the NFT.Storage pinning service.
+// It alias to PinFile.
+func (nft *NFTStorage) PinDir(name string) (string, error) {
+	return nft.PinFile(name)
 }

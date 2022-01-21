@@ -41,14 +41,20 @@ Use flag `-p infura`.
 <!-- markdownlint-disable-file MD010 -->
 ```sh
 $ ipfs-pinner
-A CLI tool for pin files to IPFS.
+A CLI tool for pin files or directory to IPFS.
 
 Usage:
 
-  ipfs-pinner [options] [file1] ... [fileN]
+  ipfs-pinner [flags] [path]...
+
+Flags:
 
   -p string
-       IPFS pinner, supports pinners: infura, pinata. (default "infura")
+        Pinner sceret or password.
+  -t string
+        IPFS pinner, supports pinners: infura, pinata, nftstorage, web3storage. (default "infura")
+  -u string
+        Pinner apikey or username.
 ```
 <!-- markdownlint-enable-file MD010 -->
 
