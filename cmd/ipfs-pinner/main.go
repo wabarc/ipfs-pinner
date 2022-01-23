@@ -1,13 +1,21 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"os"
 	"strings"
 
+	"github.com/ipfs/go-cid"
+
 	pinner "github.com/wabarc/ipfs-pinner"
 )
+
+type pin struct {
+	path  string
+	isCid bool
+}
 
 func main() {
 	var (
@@ -62,19 +70,59 @@ Flags:
 		os.Exit(1)
 	}
 
-	for _, path := range files {
-		if _, err := os.Stat(path); err != nil {
-			fmt.Fprintf(os.Stderr, "ipfs-pinner: %s: no such file or directory\n", path)
-			continue
-		}
+	pins := []pin{}
+	for _, p := range files {
+		pins = append(pins, pin{
+			path:  p,
+			isCid: isCid(p),
+		})
+	}
 
-		handle := pinner.Config{Pinner: target, Apikey: apikey, Secret: secret}
-		cid, err := handle.Pin(path)
+	mustExist(pins)
+
+	handler := pinner.Config{
+		Pinner: target,
+		Apikey: apikey,
+		Secret: secret,
+	}
+	var cid string
+	var err error
+	for _, p := range pins {
+		if p.isCid {
+			cid, err = handler.PinHash(p.path)
+		} else {
+			cid, err = handler.Pin(p.path)
+		}
 
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "ipfs-pinner: %v\n", err)
 		} else {
-			fmt.Fprintf(os.Stdout, "%s  %s\n", cid, path)
+			fmt.Fprintf(os.Stdout, "%s  %s\n", cid, p.path)
 		}
 	}
+}
+
+func mustExist(path []pin) {
+	b := &bytes.Buffer{}
+	for _, p := range path {
+		if p.isCid {
+			continue
+		}
+		_, err := os.Stat(p.path)
+		if _, ok := err.(*os.PathError); ok {
+			fmt.Fprintln(b, err)
+		}
+	}
+	if b.Len() > 0 {
+		fmt.Println(b.String())
+		os.Exit(1)
+	}
+}
+
+func isCid(s string) bool {
+	_, err := cid.Parse(s)
+	if err != nil {
+		return false
+	}
+	return true
 }
