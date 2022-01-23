@@ -95,3 +95,21 @@ func (cfg *Config) Pin(path interface{}) (cid string, err error) {
 
 	return cid, err
 }
+
+// PinHash pins from any IPFS node, returns the original cid and an error.
+func (cfg *Config) PinHash(cid string) (string, error) {
+	ok := false
+	err := errors.New("unknown pinner")
+	switch cfg.Pinner {
+	case Infura:
+		ok, err = infura.PinHash(cid)
+	case Pinata:
+		pnt := &pinata.Pinata{Apikey: cfg.Apikey, Secret: cfg.Secret}
+		ok, err = pnt.PinHash(cid)
+	}
+	if ok {
+		return cid, nil
+	}
+
+	return "", err
+}
