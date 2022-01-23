@@ -24,8 +24,7 @@ func NewClient(client *http.Client) *http.Client {
 			return err != nil || statusCode == http.StatusTooManyRequests || statusCode >= http.StatusInternalServerError || statusCode == 0
 		}),
 		// every retry should wait one more 10 second
-		httpretry.WithBackoffPolicy(func(attemptNum int) time.Duration {
-			return time.Duration(attemptNum+1) * 10 * time.Second
-		}),
+		// backoff will be: 5, 10, 20, 40, 80, ...
+		httpretry.WithBackoffPolicy(httpretry.ExponentialBackoff(5*time.Second, time.Minute, time.Second)),
 	)
 }
