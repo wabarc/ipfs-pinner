@@ -55,6 +55,7 @@ func (cfg *Config) Pin(path interface{}) (cid string, err error) {
 			web3 := &web3storage.Web3Storage{Apikey: cfg.Apikey}
 			cid, err = web3.PinFile(v)
 		}
+		return cid, err
 	case io.Reader:
 		switch cfg.Pinner {
 		default:
@@ -72,6 +73,7 @@ func (cfg *Config) Pin(path interface{}) (cid string, err error) {
 			web3 := &web3storage.Web3Storage{Apikey: cfg.Apikey}
 			cid, err = web3.PinWithReader(v)
 		}
+		return cid, err
 	case []byte:
 		switch cfg.Pinner {
 		default:
@@ -89,11 +91,10 @@ func (cfg *Config) Pin(path interface{}) (cid string, err error) {
 			web3 := &web3storage.Web3Storage{Apikey: cfg.Apikey}
 			cid, err = web3.PinWithBytes(v)
 		}
-	default:
-		return "", errors.New("unhandled file")
+		return cid, err
 	}
 
-	return cid, err
+	return cid, errPinner
 }
 
 // PinHash pins from any IPFS node, returns the original cid and an error.
