@@ -7,7 +7,6 @@ import (
 	"mime/multipart"
 	"net/textproto"
 	"os"
-	"path"
 	"path/filepath"
 	"sync"
 
@@ -107,10 +106,13 @@ func CreateMultiForm(node *Node, form bool) (mfr *MultiFileReader, err error) {
 		_, _ = part.Write([]byte(m.data))
 	}
 
-	for _, fi := range node.files {
-		fn := node.path
-		if node.stat.IsDir() {
-			fn = path.Join(node.path, fi.Name())
+	for _, fp := range node.paths {
+		fn := node.root
+		switch {
+		case node.stat.IsDir():
+			fn = filepath.Join(node.root, fp)
+		case node.stat.Mode().IsRegular():
+			fp = filepath.Base(fn)
 		}
 		f, err := os.Open(fn)
 		if err != nil {
@@ -118,7 +120,7 @@ func CreateMultiForm(node *Node, form bool) (mfr *MultiFileReader, err error) {
 		}
 		defer f.Close()
 
-		filename := path.Join(node.base, filepath.Base(fn))
+		filename := filepath.Join(node.base, fp)
 		// absPath, _ := filepath.Abs(fn)
 		mediaHeader := textproto.MIMEHeader{}
 		// mediaHeader.Set("Abspath", absPath)

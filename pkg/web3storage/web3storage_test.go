@@ -50,12 +50,12 @@ func handleResponse(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 
 		// Pin directory
-		if len(r.MultipartForm.File["file"]) > 1 && multipartReader != nil {
+		if multipartReader != nil && len(r.MultipartForm.File["file"]) > 1 {
 			_, _ = w.Write([]byte(uploadJSON))
 			return
 		}
 		// Pin file
-		if len(r.MultipartForm.File["file"]) > 0 {
+		if multipartReader != nil && len(r.MultipartForm.File["file"]) == 1 {
 			_, _ = w.Write([]byte(uploadJSON))
 			return
 		}
@@ -140,6 +140,7 @@ func TestPinDir(t *testing.T) {
 		t.Fatalf("Unexpected create directory: %v", err)
 	}
 	defer os.RemoveAll(dir)
+	subdir, err := ioutil.TempDir(dir, "ipfs-pinner-subdir-")
 
 	// Create files
 	for i := 1; i <= 2; i++ {
@@ -151,6 +152,15 @@ func TestPinDir(t *testing.T) {
 		if _, err := f.Write(content); err != nil {
 			t.Fatal("Unexpected write content to file")
 		}
+	}
+	// Write file to subdirectory
+	f, err := ioutil.TempFile(subdir, "file-in-subdir-")
+	if err != nil {
+		t.Fatal("Unexpected create file")
+	}
+	content := []byte(helper.RandString(6, "lower"))
+	if _, err := f.Write(content); err != nil {
+		t.Fatal("Unexpected write content to file")
 	}
 
 	httpClient, mux, server := helper.MockServer()

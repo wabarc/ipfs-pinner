@@ -2,25 +2,26 @@ package file
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // Node represents a serial files.
 type Node struct {
 	base  string
-	path  string
+	root  string
 	files []os.FileInfo
+	paths []string // relative path
 	stat  os.FileInfo
 }
 
 // NewSerialFile adopts serial files and returns a Node represents a file,
 // directory, or special file.
-func NewSerialFile(path string) (node *Node, err error) {
+func NewSerialFile(root string) (node *Node, err error) {
 	node = new(Node)
-	node.path = path
-	stat, err := os.Stat(path)
+	node.root = root
+	stat, err := os.Stat(root)
 	if err != nil {
 		return node, fmt.Errorf("lookup path failed: %v", err)
 	}
@@ -28,22 +29,30 @@ func NewSerialFile(path string) (node *Node, err error) {
 	switch mode := stat.Mode(); {
 	case mode.IsRegular():
 		node.files = append(node.files, stat)
+		node.paths = append(node.paths, root)
 	case mode.IsDir():
-		contents, err := ioutil.ReadDir(path)
+		err := filepath.Walk(root, func(path string, fi os.FileInfo, err error) error {
+			if !fi.IsDir() {
+				path = strings.TrimPrefix(path, root)
+				path = strings.TrimPrefix(path, "/")
+				node.paths = append(node.paths, path)
+				node.files = append(node.files, fi)
+			}
+			return nil
+		})
 		if err != nil {
 			return node, fmt.Errorf("read directory failed: %v", err)
 		}
-		node.files = contents
 	default:
-		return node, fmt.Errorf("unrecognized file type for %s: %s", path, mode.String())
+		return node, fmt.Errorf("unrecognized file type for %s: %s", root, mode.String())
 	}
 	return
 }
 
-// MapDirectory sets up a new target directory by given path.
-func (n *Node) MapDirectory(path string) {
+// MapDirectory sets up a new target directory by given path name.
+func (n *Node) MapDirectory(name string) {
 	if n.stat.IsDir() {
-		n.base = path
+		n.base = name
 	}
 }
 
