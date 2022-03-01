@@ -76,7 +76,7 @@ jobs:
       GOMIPSLE: ${{ matrix.mipsle }}
     steps:
     - name: Check out code into the Go module directory
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         fetch-depth: 0
 
@@ -137,7 +137,7 @@ jobs:
     needs: [build, checksum]
     steps:
     - name: Check out code base
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         fetch-depth: 0
 
