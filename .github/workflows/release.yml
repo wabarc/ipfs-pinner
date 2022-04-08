@@ -118,7 +118,7 @@ jobs:
       digest: ${{ steps.digest.outputs.result }}
     steps:
     - name: Download math result from build job
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
         name: ${{ env.PRODUCT }}
         path: .
@@ -142,7 +142,7 @@ jobs:
         fetch-depth: 0
 
     - name: Download math result from build and checksum jobs
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
         name: ${{ env.PRODUCT }}
         path: ${{ env.PRODUCT }} # Put files to ipfs-pinner directory
@@ -191,7 +191,7 @@ jobs:
     needs: [release]
     steps:
     - name: Download artifact
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
         name: release-note
         path: .
