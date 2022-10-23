@@ -116,7 +116,7 @@ jobs:
           ARGS="${ARGS}-${GOMIPSLE}"
         fi
         make ${ARGS}
-        echo "::set-output name=filename::${{ env.PRODUCT }}-${ARGS}"
+        echo "filename=${{ env.PRODUCT }}-${ARGS}" >> $GITHUB_OUTPUT
 
     - name: Upload binary artifacts
       uses: actions/upload-artifact@v2

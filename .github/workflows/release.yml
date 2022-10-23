@@ -99,7 +99,7 @@ jobs:
           ARGS="${ARGS}-${GOMIPSLE}"
         fi
         make ${ARGS}
-        echo "::set-output name=args::${ARGS}"
+        echo "args=${ARGS}" >> $GITHUB_OUTPUT
 
     - name: Archive binary
       run: make TARGET=${{ steps.builder.outputs.args }} releases
@@ -129,7 +129,7 @@ jobs:
         digest=$(find ipfs-pinner* -type f -exec sha256sum {} +)
         digest="${digest//$'%'/%25}"
         digest="${digest//$'\n'/%0A}"
-        echo "::set-output name=result::$digest"
+        echo "result=${digest}" >> $GITHUB_OUTPUT
 
   release:
     name: Create and upload release
