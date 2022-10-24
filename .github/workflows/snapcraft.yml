@@ -11,11 +11,6 @@ jobs:
   snapcraft:
     name: Release Snapcraft
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        platform:
-          - i386
-          - amd64
     steps:
     - name: Check out code base
       uses: actions/checkout@v3
@@ -27,14 +22,13 @@ jobs:
 
     - id: build
       name: Build snap
-      uses: diddlesnaps/snapcraft-multiarch-action@v1
+      uses: snapcore/action-build@989705ff968611277779118c9990c34af832840d # v1.1.1
       with:
-        architecture: ${{ matrix.platform }}
-        snapcraft-channel: stable
+        snapcraft-channel: edge
 
     - uses: actions/upload-artifact@v2
       with:
-        name: ipfs-pinner-${{ matrix.platform }}
+        name: ipfs-pinner
         path: ${{ steps.build.outputs.snap }}
 
     - uses: snapcore/action-publish@v1

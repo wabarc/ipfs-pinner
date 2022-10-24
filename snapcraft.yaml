@@ -33,11 +33,12 @@ description: |
   Filecoin and makes content available via IPFS leveraging the unique
   properties of each network.
 
-grade: stable
-
-confinement: strict
-
 base: core18
+grade: stable
+confinement: strict
+compression: lzo
+architectures:
+  - build-on: [i386, amd64, arm64, armhf, ppc64el, s390x]
 
 parts:
   ipfs-pinner:
