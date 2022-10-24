@@ -5,5 +5,4 @@
 // properties of each network.
 //
 // Docs: https://docs.web3.storage/
-//
 package web3storage

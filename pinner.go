@@ -30,6 +30,7 @@ type Config struct {
 // is an interface to access the file. It's contents may be either stored in
 // memory or on disk. If stored on disk, it's underlying concrete type should
 // be a file path. If it is in memory, it should be an *io.Reader or byte slice.
+//
 //nolint:gocyclo
 func (cfg *Config) Pin(path interface{}) (cid string, err error) {
 	// TODO using generics
