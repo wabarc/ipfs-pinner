@@ -6,7 +6,7 @@ require (
 	github.com/ipfs/go-cid v0.1.0
 	github.com/ipfs/go-ipfs-files v0.1.1-0.20220118065129-90b5617c775d
 	github.com/wabarc/helper v0.0.0-20211225065210-3d35291efe54
-	github.com/ybbus/httpretry v1.0.1
+	github.com/ybbus/httpretry v1.0.2
 )
 
 require (
