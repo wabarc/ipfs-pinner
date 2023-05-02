@@ -35,6 +35,8 @@ type addEvent struct {
 
 // PinFile alias to *Infura.PinFile, the purpose is to be backwards
 // compatible with the original function.
+//
+// Deprecated: use `Infura.PinFile` instead.
 func PinFile(fp string) (string, error) {
 	return (&Infura{}).PinFile(fp)
 }
