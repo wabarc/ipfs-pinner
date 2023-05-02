@@ -8,7 +8,7 @@ import (
 	"mime/multipart"
 	"net/http"
 
-	"github.com/ipfs/go-libipfs/files"
+	"github.com/ipfs/boxo/files"
 	"github.com/wabarc/helper"
 	"github.com/wabarc/ipfs-pinner/file"
 
