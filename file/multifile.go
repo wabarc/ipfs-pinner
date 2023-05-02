@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"sync"
 
-	files "github.com/ipfs/go-ipfs-files"
+	"github.com/ipfs/go-libipfs/files"
 )
 
 // MultiFileReader reads from a `commands.Node` (which can be a directory of

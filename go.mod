@@ -1,10 +1,10 @@
 module github.com/wabarc/ipfs-pinner
 
-go 1.17
+go 1.19
 
 require (
 	github.com/ipfs/go-cid v0.3.2
-	github.com/ipfs/go-ipfs-files v0.3.0
+	github.com/ipfs/go-libipfs v0.4.1
 	github.com/wabarc/helper v0.0.0-20230418130954-be7440352bcb
 	github.com/ybbus/httpretry v1.0.2
 )
@@ -12,7 +12,6 @@ require (
 require (
 	github.com/crackcomm/go-gitignore v0.0.0-20170627025303-887ab5e44cc3 // indirect
 	github.com/fortytw2/leaktest v1.3.0 // indirect
-	github.com/ipfs/go-libipfs v0.4.1 // indirect
 	github.com/kennygrant/sanitize v1.2.4 // indirect
 	github.com/klauspost/cpuid/v2 v2.1.1 // indirect
 	github.com/mattn/go-isatty v0.0.18 // indirect
