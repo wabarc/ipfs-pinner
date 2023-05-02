@@ -30,6 +30,7 @@ type Config struct {
 // is an interface to access the file. It's contents may be either stored in
 // memory or on disk. If stored on disk, it's underlying concrete type should
 // be a file path. If it is in memory, it should be an *io.Reader or byte slice.
+//
 //nolint:gocyclo
 func (cfg *Config) Pin(path interface{}) (cid string, err error) {
 	// TODO using generics
@@ -44,7 +45,8 @@ func (cfg *Config) Pin(path interface{}) (cid string, err error) {
 		default:
 			err = errPinner
 		case Infura:
-			cid, err = infura.PinFile(v)
+			inf := &infura.Infura{Apikey: cfg.Apikey, Secret: cfg.Secret}
+			cid, err = inf.PinFile(v)
 		case Pinata:
 			pnt := &pinata.Pinata{Apikey: cfg.Apikey, Secret: cfg.Secret}
 			cid, err = pnt.PinFile(v)
@@ -61,7 +63,7 @@ func (cfg *Config) Pin(path interface{}) (cid string, err error) {
 		default:
 			err = errPinner
 		case Infura:
-			inf := infura.Infura{ProjectID: cfg.Apikey, ProjectSecret: cfg.Secret}
+			inf := &infura.Infura{Apikey: cfg.Apikey, Secret: cfg.Secret}
 			cid, err = inf.PinWithReader(v)
 		case Pinata:
 			pnt := &pinata.Pinata{Apikey: cfg.Apikey, Secret: cfg.Secret}
@@ -79,7 +81,7 @@ func (cfg *Config) Pin(path interface{}) (cid string, err error) {
 		default:
 			err = errPinner
 		case Infura:
-			inf := infura.Infura{ProjectID: cfg.Apikey, ProjectSecret: cfg.Secret}
+			inf := &infura.Infura{Apikey: cfg.Apikey, Secret: cfg.Secret}
 			cid, err = inf.PinWithBytes(v)
 		case Pinata:
 			pnt := &pinata.Pinata{Apikey: cfg.Apikey, Secret: cfg.Secret}
@@ -100,10 +102,11 @@ func (cfg *Config) Pin(path interface{}) (cid string, err error) {
 // PinHash pins from any IPFS node, returns the original cid and an error.
 func (cfg *Config) PinHash(cid string) (string, error) {
 	ok := false
-	err := errors.New("unknown pinner")
+	err := errors.New("unsupported pinner")
 	switch cfg.Pinner {
 	case Infura:
-		ok, err = infura.PinHash(cid)
+		inf := &infura.Infura{Apikey: cfg.Apikey, Secret: cfg.Secret}
+		ok, err = inf.PinHash(cid)
 	case Pinata:
 		pnt := &pinata.Pinata{Apikey: cfg.Apikey, Secret: cfg.Secret}
 		ok, err = pnt.PinHash(cid)

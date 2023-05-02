@@ -17,11 +17,11 @@ import (
 
 const api = "https://ipfs.infura.io:5001"
 
-// Infura represents an Infura configuration. If there is no ProjectID or
-// ProjectSecret, it will make API calls using anonymous requests.
+// Infura represents an Infura configuration. If there is no Apikey or
+// Secret, it will make API calls using anonymous requests.
 type Infura struct {
-	ProjectID     string
-	ProjectSecret string
+	Apikey string
+	Secret string
 
 	client *http.Client
 }
@@ -106,8 +106,8 @@ func (inf *Infura) pinFile(r io.Reader, boundary string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if inf.ProjectID != "" && inf.ProjectSecret != "" {
-		req.SetBasicAuth(inf.ProjectID, inf.ProjectSecret)
+	if inf.Apikey != "" && inf.Secret != "" {
+		req.SetBasicAuth(inf.Apikey, inf.Secret)
 	}
 	req.Header.Add("Content-Type", boundary)
 	req.Header.Set("Content-Disposition", `form-data; name="files"`)
@@ -158,8 +158,8 @@ func (inf *Infura) PinHash(hash string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	if inf.ProjectID != "" && inf.ProjectSecret != "" {
-		req.SetBasicAuth(inf.ProjectID, inf.ProjectSecret)
+	if inf.Apikey != "" && inf.Secret != "" {
+		req.SetBasicAuth(inf.Apikey, inf.Secret)
 	}
 	client := httpretry.NewClient(inf.client)
 	resp, err := client.Do(req)
