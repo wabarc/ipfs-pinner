@@ -13,7 +13,7 @@ import (
 
 func NewClient(client *http.Client) *http.Client {
 	if client == nil {
-		client = &http.Client{}
+		client = http.DefaultClient
 	}
 	return httpretry.NewCustomClient(
 		client,
