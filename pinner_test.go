@@ -16,12 +16,17 @@ import (
 )
 
 var (
-	// This key is only for testing purposes.
-	pinataKey        = "8864aeb47a5d4b2801c6"
-	pinataSec        = "7f70e2a3720efbfee0905fb5b3af8994c58a4a09766bca190d5259d34b03d345"
+	apikey           = "8864aeb47a5d4b2801c6"
+	secret           = "7f70e2a3720efbfee0905fb5b3af8994c58a4a09766bca190d5259d34b03d345"
 	badRequestJSON   = `{}`
 	unauthorizedJSON = `{}`
-	pinHashJSON      = `{
+	addJSON          = `{
+  "Bytes": 0,
+  "Hash": "Qmaisz6NMhDB51cCvNWa1GMS7LU1pAxdF4Ld6Ft9kZEP2a",
+  "Name": "name",
+  "Size": "string"
+}`
+	pinHashJSON = `{
     "hashToPin": "Qmaisz6NMhDB51cCvNWa1GMS7LU1pAxdF4Ld6Ft9kZEP2a"
 }`
 	pinFileJSON = `{
@@ -34,7 +39,47 @@ var (
 func handleResponse(w http.ResponseWriter, r *http.Request) {
 	switch r.URL.Hostname() {
 	case "ipfs.infura.io":
-		// TODO
+		pinHashJSON = `{
+  "Pins": [
+    "Qmaisz6NMhDB51cCvNWa1GMS7LU1pAxdF4Ld6Ft9kZEP2a"
+  ],
+  "Progress": 0
+}`
+		authorization := r.Header.Get("Authorization")
+		if len(authorization) < 10 {
+			w.WriteHeader(http.StatusUnauthorized)
+			_, _ = w.Write([]byte(unauthorizedJSON))
+			return
+		}
+
+		switch r.URL.Path {
+		case "/api/v0/add":
+			_ = r.ParseMultipartForm(32 << 20)
+			_, params, parseErr := mime.ParseMediaType(r.Header.Get("Content-Type"))
+			if parseErr != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				_, _ = w.Write([]byte(badRequestJSON))
+				return
+			}
+
+			multipartReader := multipart.NewReader(r.Body, params["boundary"])
+			defer r.Body.Close()
+
+			// Pin directory
+			if len(r.MultipartForm.File) == 0 && multipartReader != nil {
+				_, _ = w.Write([]byte(addJSON))
+				return
+			}
+			// Pin file
+			if len(r.MultipartForm.File["file"]) > 0 {
+				_, _ = w.Write([]byte(addJSON))
+				return
+			}
+		case "/api/v0/pin/add":
+			_, _ = w.Write([]byte(pinHashJSON))
+			return
+		}
+		w.WriteHeader(http.StatusBadRequest)
 	case "api.pinata.cloud":
 		authorization := r.Header.Get("Authorization")
 		apiKey := r.Header.Get("pinata_api_key")
@@ -117,12 +162,12 @@ func TestPinFile(t *testing.T) {
 		source string
 		file   interface{}
 	}{
-		{"infura", "", "", "os.File", fr},
-		{"infura", "", "", "strings.Reader", strings.NewReader(helper.RandString(6, "lower"))},
-		{"infura", "", "", "bytes.Buffer", bytes.NewBufferString(helper.RandString(6, "lower"))},
-		{"pinata", pinataKey, pinataSec, "os.File", tmpfile},
-		{"pinata", pinataKey, pinataSec, "strings.Reader", strings.NewReader(helper.RandString(6, "lower"))},
-		{"pinata", pinataKey, pinataSec, "bytes.Buffer", bytes.NewBufferString(helper.RandString(6, "lower"))},
+		{"infura", apikey, secret, "os.File", fr},
+		{"infura", apikey, secret, "strings.Reader", strings.NewReader(helper.RandString(6, "lower"))},
+		{"infura", apikey, secret, "bytes.Buffer", bytes.NewBufferString(helper.RandString(6, "lower"))},
+		{"pinata", apikey, secret, "os.File", tmpfile},
+		{"pinata", apikey, secret, "strings.Reader", strings.NewReader(helper.RandString(6, "lower"))},
+		{"pinata", apikey, secret, "bytes.Buffer", bytes.NewBufferString(helper.RandString(6, "lower"))},
 	}
 
 	for _, test := range tests {
@@ -145,8 +190,8 @@ func TestPinFileWithBytes(t *testing.T) {
 		source string
 		file   interface{}
 	}{
-		{"infura", "", "", "bytes", []byte(helper.RandString(6, "lower"))},
-		{"pinata", pinataKey, pinataSec, "bytes", []byte(helper.RandString(6, "lower"))},
+		{"infura", apikey, secret, "bytes", []byte(helper.RandString(6, "lower"))},
+		{"pinata", apikey, secret, "bytes", []byte(helper.RandString(6, "lower"))},
 	}
 
 	httpClient, mux, server := helper.MockServer()
