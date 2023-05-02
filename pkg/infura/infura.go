@@ -8,10 +8,10 @@ import (
 	"mime/multipart"
 	"net/http"
 
+	"github.com/ipfs/boxo/files"
 	"github.com/wabarc/helper"
 	"github.com/wabarc/ipfs-pinner/file"
 
-	files "github.com/ipfs/go-ipfs-files"
 	httpretry "github.com/wabarc/ipfs-pinner/http"
 )
 
@@ -20,10 +20,10 @@ const api = "https://ipfs.infura.io:5001"
 // Infura represents an Infura configuration. If there is no Apikey or
 // Secret, it will make API calls using anonymous requests.
 type Infura struct {
+	*http.Client
+
 	Apikey string
 	Secret string
-
-	client *http.Client
 }
 
 type addEvent struct {
@@ -35,6 +35,8 @@ type addEvent struct {
 
 // PinFile alias to *Infura.PinFile, the purpose is to be backwards
 // compatible with the original function.
+//
+// Deprecated: use `Infura.PinFile` instead.
 func PinFile(fp string) (string, error) {
 	return (&Infura{}).PinFile(fp)
 }
@@ -99,8 +101,7 @@ func (inf *Infura) PinWithBytes(buf []byte) (string, error) {
 
 func (inf *Infura) pinFile(r io.Reader, boundary string) (string, error) {
 	endpoint := api + "/api/v0/add?cid-version=1&pin=true"
-	client := httpretry.NewClient(inf.client)
-	// client.Timeout = 30 * time.Second
+	client := httpretry.NewClient(inf.Client)
 
 	req, err := http.NewRequest(http.MethodPost, endpoint, r)
 	if err != nil {
@@ -161,7 +162,7 @@ func (inf *Infura) PinHash(hash string) (bool, error) {
 	if inf.Apikey != "" && inf.Secret != "" {
 		req.SetBasicAuth(inf.Apikey, inf.Secret)
 	}
-	client := httpretry.NewClient(inf.client)
+	client := httpretry.NewClient(inf.Client)
 	resp, err := client.Do(req)
 	if err != nil {
 		return false, err

@@ -18,9 +18,9 @@ const api = "https://api.web3.storage"
 
 // Web3Storage represents a Web3Storage configuration.
 type Web3Storage struct {
-	Apikey string
+	*http.Client
 
-	client *http.Client
+	Apikey string
 }
 
 type addEvent struct {
@@ -100,7 +100,7 @@ func (web3 *Web3Storage) pinFile(r io.Reader, boundary string) (string, error) {
 	}
 	req.Header.Add("Content-Type", boundary)
 	req.Header.Add("Authorization", "Bearer "+web3.Apikey)
-	client := httpretry.NewClient(web3.client)
+	client := httpretry.NewClient(web3.Client)
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", err
