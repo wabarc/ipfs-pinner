@@ -1,3 +1,7 @@
+# Copyright 2023 Wayback Archiver. All rights reserved.
+# Use of this source code is governed by the GNU GPL v3
+# license that can be found in the LICENSE file.
+#
 name: Linter
 
 on:
@@ -9,115 +13,36 @@ on:
       - '**'
     types: [ opened, synchronize, reopened ]
 
-permissions: write-all
+permissions:
+  contents: read
+
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code base
-        if: github.event_name == 'push'
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+  super-linter:
+    name: Super Linter
+    uses: wabarc/.github/.github/workflows/reusable-super-linter.yml@main
 
-      - name: Check out code base
-        if: github.event_name == 'pull_request'
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: Lint Code Base
-        uses: github/super-linter@v4
-        env:
-          DEFAULT_BRANCH: 'main'
-          VALIDATE_MARKDOWN: true
-          VALIDATE_DOCKERFILE: true
-          VALIDATE_BASH: true
-          VALIDATE_BASH_EXEC: true
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  go:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code base
-        if: github.event_name == 'push'
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - name: Check out code base
-        if: github.event_name == 'pull_request'
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: Golang linter
-        uses: golangci/golangci-lint-action@v2
+  golangci:
+    name: golangci-lint
+    uses: wabarc/.github/.github/workflows/reusable-golangci.yml@main
 
   shellcheck:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code base
-        if: github.event_name == 'push'
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - name: Check out code base
-        if: github.event_name == 'pull_request'
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: Run shellcheck with reviewdog
-        uses: reviewdog/action-shellcheck@v1
+    name: ShellCheck
+    uses: wabarc/.github/.github/workflows/reusable-shellcheck.yml@main
 
   misspell:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code base
-        if: github.event_name == 'push'
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - name: Check out code base
-        if: github.event_name == 'pull_request'
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: Run misspell with reviewdog
-        uses: reviewdog/action-misspell@v1
+    name: Misspell
+    uses: wabarc/.github/.github/workflows/reusable-misspell.yml@main
 
   alex:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code base
-        if: github.event_name == 'push'
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+    name: Alex
+    uses: wabarc/.github/.github/workflows/reusable-alex.yml@main
 
-      - name: Check out code base
-        if: github.event_name == 'pull_request'
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: Run alex with reviewdog
-        uses: reviewdog/action-alex@v1
+  urlcheck:
+    name: URLCheck
+    uses: wabarc/.github/.github/workflows/reusable-urlcheck.yml@main
+    with:
+      exclude-patterns: ${{ vars.URLCHECH_EXCLUDE }}
 
   goreportcard:
-    if: ${{ github.ref == 'refs/heads/main' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Run Go report card
-        run: |
-          path=$(curl -sf -X POST -F "repo=github.com/$GITHUB_REPOSITORY" https://goreportcard.com/checks | jq -r '.redirect')
-          echo -e "\nSee report for https://goreportcard.com${path}"
+    name: Go Report Card
+    uses: wabarc/.github/.github/workflows/reusable-goreportcard.yml@main
