@@ -16,6 +16,7 @@ jobs:
     with:
       product: ipfs-pinner
       channel: stable
-      publish: ${{ github.repository == 'wabarc/ipfs-pinner' && github.event_name == 'push' }}
+      publish: true
+      release: true
     secrets:
       snapcraft-token: ${{ secrets.SNAPCRAFT_TOKEN }}
