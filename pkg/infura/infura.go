@@ -8,10 +8,10 @@ import (
 	"mime/multipart"
 	"net/http"
 
+	"github.com/ipfs/go-libipfs/files"
 	"github.com/wabarc/helper"
 	"github.com/wabarc/ipfs-pinner/file"
 
-	files "github.com/ipfs/go-ipfs-files"
 	httpretry "github.com/wabarc/ipfs-pinner/http"
 )
 
