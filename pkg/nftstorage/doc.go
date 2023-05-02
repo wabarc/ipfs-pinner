@@ -4,5 +4,4 @@
 // (“ipfs://…”) is completely unique to that data.
 //
 // Docs: https://nft.storage/api-docs/
-//
 package nftstorage

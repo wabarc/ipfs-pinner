@@ -23,10 +23,10 @@ const (
 
 // Pinata represents a Pinata configuration.
 type Pinata struct {
+	*http.Client
+
 	Apikey string
 	Secret string
-
-	client *http.Client
 }
 
 type addEvent struct {
@@ -128,7 +128,7 @@ func (p *Pinata) pinFile(r io.Reader, boundary string) (string, error) {
 		req.Header.Add("Authorization", "Bearer "+p.Apikey)
 	}
 
-	client := httpretry.NewClient(p.client)
+	client := httpretry.NewClient(p.Client)
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", err
@@ -175,7 +175,7 @@ func (p *Pinata) PinHash(hash string) (bool, error) {
 		req.Header.Add("Authorization", "Bearer "+p.Apikey)
 	}
 
-	client := httpretry.NewClient(p.client)
+	client := httpretry.NewClient(p.Client)
 	resp, err := client.Do(req)
 	if err != nil {
 		return false, err
