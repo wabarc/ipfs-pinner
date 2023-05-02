@@ -18,9 +18,9 @@ import (
 )
 
 var (
-	projectID     = "fake-project-id"
-	projectSecret = "fake-project-secret"
-	addJSON       = `{
+	apikey  = "fake-project-id"
+	secret  = "fake-project-secret"
+	addJSON = `{
   "Bytes": 0,
   "Hash": "Qmaisz6NMhDB51cCvNWa1GMS7LU1pAxdF4Ld6Ft9kZEP2a",
   "Name": "name",
@@ -92,7 +92,7 @@ func TestPinFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	inf := &Infura{projectID, projectSecret, httpClient}
+	inf := &Infura{httpClient, apikey, secret}
 	o, err := inf.PinFile(tmpfile.Name())
 	if err != nil {
 		t.Fatal(err)
@@ -128,7 +128,7 @@ func TestPinWithReader(t *testing.T) {
 		{"bytes.Buffer", bytes.NewBufferString(helper.RandString(6, "lower"))},
 	}
 
-	inf := &Infura{projectID, projectSecret, httpClient}
+	inf := &Infura{httpClient, apikey, secret}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			file := test.file.(io.Reader)
@@ -149,7 +149,7 @@ func TestPinWithBytes(t *testing.T) {
 	mux.HandleFunc("/", handleResponse)
 	defer server.Close()
 
-	inf := &Infura{projectID, projectSecret, httpClient}
+	inf := &Infura{httpClient, apikey, secret}
 	buf := []byte(helper.RandString(6, "lower"))
 	o, err := inf.PinWithBytes(buf)
 	if err != nil {
@@ -168,7 +168,7 @@ func TestPinHash(t *testing.T) {
 
 	hash := "Qmaisz6NMhDB51cCvNWa1GMS7LU1pAxdF4Ld6Ft9kZEP2a"
 
-	inf := &Infura{projectID, projectSecret, httpClient}
+	inf := &Infura{httpClient, apikey, secret}
 	if ok, err := inf.PinHash(hash); !ok || err != nil {
 		t.Error(err)
 	}
@@ -211,7 +211,7 @@ func TestPinDir(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unexpected creates multipart file")
 	}
-	inf := &Infura{projectID, projectSecret, httpClient}
+	inf := &Infura{httpClient, apikey, secret}
 	o, err := inf.PinDir(body)
 	if err != nil {
 		t.Fatalf("Unexpected pin directory: %v", err)
@@ -252,7 +252,7 @@ func TestRateLimit(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	inf := &Infura{projectID, projectSecret, httpClient}
+	inf := &Infura{httpClient, apikey, secret}
 	o, err := inf.PinFile(tmpfile.Name())
 	if err != nil {
 		t.Error(err)

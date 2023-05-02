@@ -80,7 +80,7 @@ func TestPinFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	web3 := &Web3Storage{Apikey: "fake-web3-storage-apikey", client: httpClient}
+	web3 := &Web3Storage{Apikey: "fake-web3-storage-apikey", Client: httpClient}
 	if _, err := web3.PinFile(tmpfile.Name()); err != nil {
 		t.Error(err)
 	}
@@ -111,7 +111,7 @@ func TestPinWithReader(t *testing.T) {
 		{"bytes.Buffer", bytes.NewBufferString(helper.RandString(6, "lower"))},
 	}
 
-	web3 := &Web3Storage{Apikey: "fake-web3-storage-apikey", client: httpClient}
+	web3 := &Web3Storage{Apikey: "fake-web3-storage-apikey", Client: httpClient}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			file := test.file.(io.Reader)
@@ -127,7 +127,7 @@ func TestPinWithBytes(t *testing.T) {
 	mux.HandleFunc("/", handleResponse)
 	defer server.Close()
 
-	web3 := &Web3Storage{Apikey: "fake-web3-storage-apikey", client: httpClient}
+	web3 := &Web3Storage{Apikey: "fake-web3-storage-apikey", Client: httpClient}
 	buf := []byte(helper.RandString(6, "lower"))
 	if _, err := web3.PinWithBytes(buf); err != nil {
 		t.Error(err)
@@ -167,7 +167,7 @@ func TestPinDir(t *testing.T) {
 	mux.HandleFunc("/", handleResponse)
 	defer server.Close()
 
-	web3 := &Web3Storage{Apikey: "fake-web3-storage-apikey", client: httpClient}
+	web3 := &Web3Storage{Apikey: "fake-web3-storage-apikey", Client: httpClient}
 	o, err := web3.PinDir(dir)
 	if err != nil {
 		t.Fatalf("Unexpected pin directory: %v", err)
@@ -187,7 +187,7 @@ func TestPinHash(t *testing.T) {
 
 	hash := "Qmaisz6NMhDB51cCvNWa1GMS7LU1pAxdF4Ld6Ft9kZEP2a"
 
-	web3 := &Web3Storage{Apikey: "fake-web3-storage-apikey", client: httpClient}
+	web3 := &Web3Storage{Apikey: "fake-web3-storage-apikey", Client: httpClient}
 	if ok, err := web3.PinHash(hash); !ok || err != nil {
 		t.Error(err)
 	}

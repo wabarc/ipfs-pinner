@@ -123,7 +123,7 @@ func TestPinFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	nft := &NFTStorage{Apikey: "fake-nft-storage-apikey", client: httpClient}
+	nft := &NFTStorage{Apikey: "fake-nft-storage-apikey", Client: httpClient}
 	if _, err := nft.PinFile(tmpfile.Name()); err != nil {
 		t.Error(err)
 	}
@@ -154,7 +154,7 @@ func TestPinWithReader(t *testing.T) {
 		{"bytes.Buffer", bytes.NewBufferString(helper.RandString(6, "lower"))},
 	}
 
-	nft := &NFTStorage{Apikey: "fake-nft-storage-apikey", client: httpClient}
+	nft := &NFTStorage{Apikey: "fake-nft-storage-apikey", Client: httpClient}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			file := test.file.(io.Reader)
@@ -170,7 +170,7 @@ func TestPinWithBytes(t *testing.T) {
 	mux.HandleFunc("/", handleResponse)
 	defer server.Close()
 
-	nft := &NFTStorage{Apikey: "fake-nft-storage-apikey", client: httpClient}
+	nft := &NFTStorage{Apikey: "fake-nft-storage-apikey", Client: httpClient}
 	buf := []byte(helper.RandString(6, "lower"))
 	if _, err := nft.PinWithBytes(buf); err != nil {
 		t.Error(err)
@@ -210,7 +210,7 @@ func TestPinDir(t *testing.T) {
 	mux.HandleFunc("/", handleResponse)
 	defer server.Close()
 
-	nft := &NFTStorage{Apikey: "fake-nft-storage-apikey", client: httpClient}
+	nft := &NFTStorage{Apikey: "fake-nft-storage-apikey", Client: httpClient}
 	o, err := nft.PinDir(dir)
 	if err != nil {
 		t.Fatalf("Unexpected pin directory: %v", err)
@@ -230,7 +230,7 @@ func TestPinHash(t *testing.T) {
 
 	hash := "Qmaisz6NMhDB51cCvNWa1GMS7LU1pAxdF4Ld6Ft9kZEP2a"
 
-	nft := &NFTStorage{Apikey: "fake-nft-storage-apikey", client: httpClient}
+	nft := &NFTStorage{Apikey: "fake-nft-storage-apikey", Client: httpClient}
 	if ok, err := nft.PinHash(hash); !ok || err != nil {
 		t.Error(err)
 	}

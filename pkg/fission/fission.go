@@ -1,8 +1,14 @@
 package fission
 
+import (
+	"net/http"
+)
+
 const FISSION_URI = "https://runfission.com/ipfs"
 
 type Fission struct {
+	*http.Client
+
 	Username string
 	Password string
 }

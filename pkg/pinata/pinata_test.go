@@ -94,7 +94,7 @@ func TestPinFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	pinata := &Pinata{pinataKey, pinataSec, httpClient}
+	pinata := &Pinata{httpClient, pinataKey, pinataSec}
 	o, err := pinata.PinFile(tmpfile.Name())
 	if err != nil {
 		t.Fatal(err)
@@ -132,7 +132,7 @@ func TestPinWithReader(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			pinata := &Pinata{pinataKey, pinataSec, httpClient}
+			pinata := &Pinata{httpClient, pinataKey, pinataSec}
 			file := test.file.(io.Reader)
 			o, err := pinata.PinWithReader(file)
 			if err != nil {
@@ -152,7 +152,7 @@ func TestPinWithBytes(t *testing.T) {
 	defer server.Close()
 
 	buf := []byte(helper.RandString(6, "lower"))
-	pinata := &Pinata{pinataKey, pinataSec, httpClient}
+	pinata := &Pinata{httpClient, pinataKey, pinataSec}
 	o, err := pinata.PinWithBytes(buf)
 	if err != nil {
 		t.Errorf("Unexpected pin directory: %v", err)
@@ -196,7 +196,7 @@ func TestPinDir(t *testing.T) {
 		t.Fatal("Unexpected write content to file")
 	}
 
-	pinata := &Pinata{pinataKey, pinataSec, httpClient}
+	pinata := &Pinata{httpClient, pinataKey, pinataSec}
 	o, err := pinata.PinDir(dir)
 	if err != nil {
 		t.Fatalf("Unexpected pin directory: %v", err)
@@ -214,7 +214,7 @@ func TestPinHash(t *testing.T) {
 
 	hash := "Qmaisz6NMhDB51cCvNWa1GMS7LU1pAxdF4Ld6Ft9kZEP2a"
 
-	pinata := &Pinata{pinataKey, pinataSec, httpClient}
+	pinata := &Pinata{httpClient, pinataKey, pinataSec}
 	if ok, err := pinata.PinHash(hash); !ok || err != nil {
 		t.Error(err)
 	}
