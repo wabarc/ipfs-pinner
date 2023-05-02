@@ -12,6 +12,8 @@ import (
 	"github.com/wabarc/ipfs-pinner/pkg/web3storage"
 )
 
+var ErrPinner = fmt.Errorf("unsupported pinner")
+
 const (
 	Infura      = "infura"
 	Pinata      = "pinata"
@@ -37,12 +39,12 @@ type Config struct {
 //nolint:gocyclo
 func (cfg *Config) Pin(path interface{}) (cid string, err error) {
 	// TODO using generics
-	err = fmt.Errorf("unsupported pinner")
+	err = ErrPinner
 	switch v := path.(type) {
 	case string:
-		_, err := os.Lstat(v)
+		_, err = os.Lstat(v)
 		if err != nil {
-			return "", err
+			return
 		}
 		switch cfg.Pinner {
 		case Infura:
@@ -99,7 +101,7 @@ func (cfg *Config) Pin(path interface{}) (cid string, err error) {
 // PinHash pins from any IPFS node, returns the original cid and an error.
 func (cfg *Config) PinHash(cid string) (string, error) {
 	ok := false
-	err := fmt.Errorf("unsupported pinner")
+	err := ErrPinner
 	switch cfg.Pinner {
 	case Infura:
 		inf := &infura.Infura{Apikey: cfg.Apikey, Secret: cfg.Secret, Client: cfg.Client}
