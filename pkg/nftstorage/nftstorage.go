@@ -19,6 +19,7 @@ const api = "https://api.nft.storage"
 // NFTStorage represents an NFTStorage configuration.
 type NFTStorage struct {
 	*http.Client
+	HttpClientFactory func(client *http.Client) *http.Client
 
 	Apikey string
 }
@@ -93,7 +94,10 @@ func (nft *NFTStorage) pinFile(r io.Reader, boundary string) (string, error) {
 	}
 	req.Header.Add("Content-Type", boundary)
 	req.Header.Add("Authorization", "Bearer "+nft.Apikey)
-	client := httpretry.NewClient(nft.Client)
+	if nft.HttpClientFactory == nil {
+		nft.HttpClientFactory = httpretry.NewClient
+	}
+	client := nft.HttpClientFactory(nft.Client)
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", err

@@ -21,6 +21,7 @@ const api = "https://ipfs.infura.io:5001"
 // Secret, it will make API calls using anonymous requests.
 type Infura struct {
 	*http.Client
+	HttpClientFactory func(client *http.Client) *http.Client
 
 	Apikey string
 	Secret string
@@ -101,7 +102,11 @@ func (inf *Infura) PinWithBytes(buf []byte) (string, error) {
 
 func (inf *Infura) pinFile(r io.Reader, boundary string) (string, error) {
 	endpoint := api + "/api/v0/add?cid-version=1&pin=true"
-	client := httpretry.NewClient(inf.Client)
+
+	if inf.HttpClientFactory == nil {
+		inf.HttpClientFactory = httpretry.NewClient
+	}
+	client := inf.HttpClientFactory(inf.Client)
 
 	req, err := http.NewRequest(http.MethodPost, endpoint, r)
 	if err != nil {
@@ -162,7 +167,10 @@ func (inf *Infura) PinHash(hash string) (bool, error) {
 	if inf.Apikey != "" && inf.Secret != "" {
 		req.SetBasicAuth(inf.Apikey, inf.Secret)
 	}
-	client := httpretry.NewClient(inf.Client)
+	if inf.HttpClientFactory == nil {
+		inf.HttpClientFactory = httpretry.NewClient
+	}
+	client := inf.HttpClientFactory(inf.Client)
 	resp, err := client.Do(req)
 	if err != nil {
 		return false, err
