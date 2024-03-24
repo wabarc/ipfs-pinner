@@ -21,7 +21,9 @@ on:
       - "Makefile"
   workflow_dispatch:
 
-permissions: write-all
+permissions:
+  contents: read
+
 jobs:
   test:
     name: Testing

@@ -33,12 +33,11 @@ linters:
     - bodyclose
     - misspell
     - rowserrcheck
-    - structcheck
     - stylecheck
     - typecheck
-    - varcheck
     - unconvert
     - unparam
+    - unused
     - whitespace
 linters-settings:
   errcheck:
