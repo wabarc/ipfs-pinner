@@ -97,7 +97,7 @@ jobs:
     needs: [release]
     steps:
     - name: Download artifact
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v6
       with:
         name: release-note
         path: .
