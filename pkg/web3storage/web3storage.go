@@ -107,7 +107,7 @@ func (web3 *Web3Storage) pinFile(r io.Reader, boundary string) (string, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf(resp.Status)
+		return "", fmt.Errorf("%s", resp.Status)
 	}
 
 	data, err := io.ReadAll(resp.Body)

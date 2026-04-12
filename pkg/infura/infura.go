@@ -120,7 +120,7 @@ func (inf *Infura) pinFile(r io.Reader, boundary string) (string, error) {
 	// It limits anonymous requests to 12 write requests/min.
 	// https://infura.io/docs/ipfs#section/Rate-Limits/API-Anonymous-Requests
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf(resp.Status)
+		return "", fmt.Errorf("%s", resp.Status)
 	}
 
 	var out addEvent
@@ -171,7 +171,7 @@ func (inf *Infura) PinHash(hash string) (bool, error) {
 	// It limits anonymous requests to 12 write requests/min.
 	// https://infura.io/docs/ipfs#section/Rate-Limits/API-Anonymous-Requests
 	if resp.StatusCode != http.StatusOK {
-		return false, fmt.Errorf(resp.Status)
+		return false, fmt.Errorf("%s", resp.Status)
 	}
 
 	data, err := io.ReadAll(resp.Body)

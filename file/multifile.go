@@ -39,7 +39,7 @@ func NewMultiFileReader(path string, form bool) (*files.MultiFileReader, error) 
 	}
 	d := files.NewMapDirectory(map[string]files.Node{"": file}) // unwrapped on the other side
 
-	return files.NewMultiFileReader(d, form), nil
+	return files.NewMultiFileReader(d, form, false), nil
 }
 
 // CreateMultiForm constructs a MultiFileReader. `path` should be a Node in serialfile.

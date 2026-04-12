@@ -135,7 +135,7 @@ func (p *Pinata) pinFile(r io.Reader, boundary string) (string, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf(resp.Status)
+		return "", fmt.Errorf("%s", resp.Status)
 	}
 
 	data, err := io.ReadAll(resp.Body)
@@ -182,7 +182,7 @@ func (p *Pinata) PinHash(hash string) (bool, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return false, fmt.Errorf(resp.Status)
+		return false, fmt.Errorf("%s", resp.Status)
 	}
 
 	data, err := io.ReadAll(resp.Body)
