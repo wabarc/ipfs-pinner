@@ -121,8 +121,5 @@ func mustExist(path []pin) {
 
 func isCid(s string) bool {
 	_, err := cid.Parse(s)
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }
