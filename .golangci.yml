@@ -85,6 +85,9 @@ linters:
           - goconst
           - gosec
         path: _test\.go
+      - linters:
+          - goimports
+        path: pkg\/ipfs-cluster\/cluster\.go
     paths:
       - third_party$
       - builtin$
