@@ -20,6 +20,10 @@ jobs:
   super-linter:
     name: Super Linter
     uses: wabarc/.github/.github/workflows/reusable-super-linter.yml@main
+    permissions:
+      contents: read
+      packages: read
+      statuses: write
 
   golangci:
     name: golangci-lint
