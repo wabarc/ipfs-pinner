@@ -39,17 +39,29 @@ confinement: strict
 
 base: core20
 
+architectures:
+  - amd64
+  - arm64
+  - armhf
+  - i386
+
 parts:
   ipfs-pinner:
     plugin: go
     source: https://github.com/wabarc/ipfs-pinner.git
-    go-importpath: github.com/wabarc/ipfs-pinner/cmd/ipfs-pinner
+    override-build: |
+      make build
+      install $SNAPCRAFT_PART_BUILD/build/binary/ipfs-pinner -D $SNAPCRAFT_PART_INSTALL/bin/ipfs-pinner
+      mkdir -p $SNAPCRAFT_PART_INSTALL/bin
+      if [ ! -e $SNAPCRAFT_PART_INSTALL/bin/ipfs-pinner ]; then
+        ln -s $SNAPCRAFT_PART_INSTALL/bin/ipfs-pinner $SNAPCRAFT_PART_INSTALL/bin/ipfs-pinner
+      fi
     build-packages:
       - build-essential
 
 apps:
   ipfs-pinner:
-    command: ipfs-pinner
+    command: bin/ipfs-pinner
     plugs:
       - home
       - network
