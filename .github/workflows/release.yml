@@ -83,7 +83,7 @@ jobs:
 
   release:
     name: Create and upload release
-    needs: [ build, debpkg, rpmpkg, aurpkg, snapcraft, flatpak ]
+    needs: [ build ]
     permissions:
       contents: write
     uses: wabarc/.github/.github/workflows/reusable-releaser-go.yml@main

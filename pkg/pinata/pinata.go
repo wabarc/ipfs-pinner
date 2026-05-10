@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"path/filepath"
@@ -139,7 +138,7 @@ func (p *Pinata) pinFile(r io.Reader, boundary string) (string, error) {
 		return "", fmt.Errorf(resp.Status)
 	}
 
-	data, err := ioutil.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}
@@ -186,7 +185,7 @@ func (p *Pinata) PinHash(hash string) (bool, error) {
 		return false, fmt.Errorf(resp.Status)
 	}
 
-	data, err := ioutil.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return false, err
 	}
