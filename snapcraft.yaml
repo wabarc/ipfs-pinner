@@ -37,7 +37,7 @@ grade: stable
 
 confinement: strict
 
-base: core18
+base: core20
 
 parts:
   ipfs-pinner:
