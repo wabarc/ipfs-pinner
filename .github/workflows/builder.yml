@@ -98,7 +98,8 @@ jobs:
     uses: wabarc/.github/.github/workflows/reusable-builder-snap.yml@main
     with:
       product: ipfs-pinner
-      channel: edge
+      channel: stable
       publish: ${{ github.repository == 'wabarc/ipfs-pinner' && github.event_name == 'push' }}
+      egress-policy: audit
     secrets:
       snapcraft-token: ${{ secrets.SNAPCRAFT_TOKEN }}
