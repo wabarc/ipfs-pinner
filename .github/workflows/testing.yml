@@ -41,7 +41,7 @@ jobs:
         go-version: ${{ matrix.go }}
 
     - name: Set up IPFS
-      uses: oduwsdl/setup-ipfs@main
+      uses: oduwsdl/setup-ipfs@678755ac20f92d2dfca7e16138e40ae75f7a0f6f # v0.8.0
       with:
         run_daemon: true
 
