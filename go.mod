@@ -4,7 +4,7 @@ go 1.25.7
 
 require (
 	github.com/ipfs/boxo v0.39.0
-	github.com/ipfs/go-cid v0.6.1
+	github.com/ipfs/go-cid v0.6.2
 	github.com/wabarc/helper v0.0.0-20240906105554-3673068835d4
 	github.com/ybbus/httpretry v1.0.2
 )
@@ -23,10 +23,10 @@ require (
 	github.com/multiformats/go-multihash v0.2.3 // indirect
 	github.com/multiformats/go-varint v0.1.0 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
-	golang.org/x/crypto v0.51.0 // indirect
-	golang.org/x/net v0.54.0 // indirect
-	golang.org/x/sys v0.44.0 // indirect
-	golang.org/x/text v0.37.0 // indirect
+	golang.org/x/crypto v0.53.0 // indirect
+	golang.org/x/net v0.55.0 // indirect
+	golang.org/x/sys v0.46.0 // indirect
+	golang.org/x/text v0.38.0 // indirect
 	lukechampine.com/blake3 v1.4.1 // indirect
 	mvdan.cc/xurls/v2 v2.6.0 // indirect
 )
